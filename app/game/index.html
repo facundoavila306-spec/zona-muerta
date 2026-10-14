@@ -31,7 +31,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #ov .k{display:inline-block;margin:10px auto 0;text-align:left;font-size:15px;line-height:1.7;opacity:.9}
 #ov .k b{display:inline-block;min-width:92px;color:#e8c27a}
 #ov .go{margin-top:22px;font-size:20px;letter-spacing:.14em;color:#e8c27a}
-</style></head><body>
+#ld{position:fixed;inset:0;z-index:999;background:#05080c;color:#cfe3f5;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 15px system-ui,sans-serif;letter-spacing:.2em}
+#ld h1{font-size:44px;letter-spacing:.25em;margin:0 0 6px;color:#e8eef5}#ld p{margin:0 0 30px;opacity:.7;letter-spacing:.12em;font-size:13px}
+#ld .bar{width:min(420px,70vw);height:6px;background:#16202b;border-radius:3px;overflow:hidden}#ld .bar i{display:block;width:40%;height:100%;background:#c24a3a;animation:ldm 1.1s ease-in-out infinite alternate}
+@keyframes ldm{from{transform:translateX(-30%)}to{transform:translateX(160%)}}
+.mb{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}.mb button{font:600 14px system-ui,sans-serif;letter-spacing:.12em;padding:10px 18px;background:#0e151d;color:#cfe3f5;border:1px solid #2b3b4c;border-radius:4px;cursor:pointer}.mb button:hover{background:#1b2a3a}#bm{margin-top:10px;font-size:13px;opacity:.85;min-height:18px}
+</style></head><body><div id="ld"><h1>ZONA MUERTA</h1><p>Neuquén centro</p><div class="bar"><i></i></div><p style="margin-top:22px">CARGANDO LA CIUDAD…</p></div>
 <canvas id="c"></canvas>
 <div id="hud">
  <div id="vig"></div><div id="hurt"></div>
@@ -44,18 +49,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 </div>
 <div id="ov"><div>
  <h1>ZONA MUERTA</h1>
- <p>Hospital Castro Rendón · 4.º piso · El Gallo McFlay</p>
+ <p>Neuquén centro · Mundo abierto · El Gallo McFlay</p>
  <div class="k">
   <div><b>WASD</b> moverse &nbsp; <b>Shift</b> correr &nbsp; <b>Espacio</b> saltar</div>
   <div><b>Mouse</b> apuntar &nbsp; <b>Click izq.</b> disparar &nbsp; <b>Click der.</b> empujar</div>
   <div><b>R</b> recargar &nbsp; <b>F</b> linterna &nbsp; <b>E</b> usar / abrir</div>
  </div>
  <div class="go" id="go">JUGAR · NEUQUÉN</div><div class="go" id="go2" style="display:none"></div>
+ <div class="mb"><button id="bq"></button><button id="bu" style="display:none">ACTUALIZAR</button><button id="bx" style="display:none">SALIR</button></div><div id="bm"></div>
 </div></div>
-<script src="data/mevdata.js"></script>
-<script src="data/mapa.js"></script>
-<script src="assets/manifest.js" onerror="void 0"></script>
-<script>
+<script type="text/plain" id="zmain">
 'use strict';
 // ====================================================== util
 const $=id=>document.getElementById(id);
@@ -931,7 +934,7 @@ function quadBox(A,B,C,D,e){const abx=B[0]-A[0],aby=B[1]-A[1],abz=B[2]-A[2],adx=
  CUR.add(_q,e.tint[0],e.tint[1],e.tint[2],1,e.layer,e.uvs,e.emi,e.mode)}
 function matOf(m,k){const n=typeof m==='string'?m:(k in m?m[k]:m.a);return MLAY[n]||MLAY.white||{tint:[1,1,1],layer:8,uvs:1,emi:0,mode:0}}
 let SBC=[],CUR=null;const CHK=80;
-let QL=1;try{const q=+localStorage.getItem('zmQL');if(q>=0&&q<=3)QL=q}catch(e){}
+let QL=1;try{const v=localStorage.getItem('zmQL');const q=v===null?-1:+v;if(q>=0&&q<=3)QL=q}catch(e){}
 const QLV=[{n:'BAJA',dd:120,rs:.55},{n:'MEDIA',dd:175,rs:.75},{n:'ALTA',dd:240,rs:1},{n:'ULTRA',dd:300,rs:1.25}];
 function drawSB(maxD,cone){const fl=Math.hypot(P.fx,P.fz)||1,nx=P.fx/fl,nz=P.fz/fl;const hf=Math.atan(Math.tan(.73)*(aspect||1.78))+.1;
  for(const c of SBC){if(!c.ib.n)continue;const dx=c.x-P.x,dz=c.z-P.z,d=Math.hypot(dx,dz);if(d>maxD+CHK*.71)continue;
@@ -2488,9 +2491,15 @@ function frame(now){
  let dt=Math.min(.05,(now-last)/1000);last=now;
  fpsA+=dt;fpsN++;if(fpsA>=.5){$('fps').textContent=Math.round(fpsN/fpsA)+' fps';fpsA=0;fpsN=0}
  if(S==='play'||S==='dead'||S==='win'){if(S==='play'||S==='dead')update(dt)}
- buildDyn();render();visorLabels();if(++hudN%3===0&&(S!=='menu'))hud()}
+ buildDyn();render();visorLabels();if(!window.__rdy&&texReady&&++RDN>=4){window.__rdy=1;const l=$('ld');if(l)l.remove()}if(++hudN%3===0&&(S!=='menu'))hud()}
 
 // ====================================================== ENTRADA
+let RDN=0;
+{const bq=$('bq'),bm=$('bm');const lab=()=>{bq.textContent='CALIDAD: '+QLV[QL].n};lab();
+ bq.addEventListener('click',e=>{e.stopPropagation();QL=(QL+1)%QLV.length;try{localStorage.setItem('zmQL',QL)}catch(x){}lab()});
+ if(window.zm){const bu=$('bu'),bx=$('bx');bu.style.display=bx.style.display='';bx.addEventListener('click',e=>{e.stopPropagation();window.zm.quit()});
+  bu.addEventListener('click',async e=>{e.stopPropagation();bu.disabled=true;bm.textContent='Buscando actualización…';try{const r=await window.zm.update();bm.textContent=r.msg}catch(x){bm.textContent='No se pudo actualizar (revisá tu internet)'}bu.disabled=false});
+  if(window.zm.version)window.zm.version().then(v=>{if(v)bm.textContent='Versión '+v.slice(0,7)}).catch(()=>0)}}
 let MODE=6;$('go').addEventListener('click',()=>{MODE=6});$('go2').addEventListener('click',()=>{MODE=6});
 function start(){AU.init();if(AU.C&&AU.C.state==='suspended')AU.C.resume();$('ov').style.display='none';$('hud').style.display='block';
  if(S==='menu'||S==='dead'||S==='win'){newGame()}S='play'}
@@ -2510,4 +2519,8 @@ loadMevTextures();newGame();
 // ganchos para pruebas
 window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},keys,cardClose,cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
 requestAnimationFrame(frame);
-</script></body></html>
+</script>
+<script src="data/mevdata.js"></script>
+<script src="data/mapa.js"></script>
+<script src="assets/manifest.js" onerror="void 0"></script>
+<script>requestAnimationFrame(()=>setTimeout(()=>{const e=document.createElement('script');e.text=document.getElementById('zmain').textContent;document.head.appendChild(e)},60))</script></body></html>
