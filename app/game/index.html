@@ -2066,7 +2066,7 @@ const SKIN=[[.62,.68,.55],[.7,.62,.55],[.55,.62,.58],[.68,.66,.6],[.6,.58,.5]];
 const SHIRT=[[.2,.45,.55],[.85,.85,.8],[.5,.15,.12],[.2,.35,.22],[.35,.35,.37],[.55,.75,.8],[.4,.3,.2],[.9,.9,.9],[.25,.3,.6]];
 const PANTS=[[.18,.22,.35],[.1,.1,.11],[.45,.4,.3],[.2,.45,.55],[.85,.85,.8]];
 function mkZ(x,z,state,type){const tank=type==='tank'||type==='Hinchado';
- const z0={id:++zid,tank,x,z,yaw:R()*6.28,vx:0,vz:0,hp:tank?1300:42+R()*20,state,t:R()*6,sc:tank?1.15:.93+R()*.14,r:tank?.62:.3,
+ const z0={id:++zid,tank,x,z,yaw:R()*6.28,vx:0,vz:0,hp:tank?2600:42+R()*20,state,t:R()*6,sc:tank?1.15:.93+R()*.14,r:tank?.62:.3,
   spd:tank?5.0:3.4+R()*2.4,spdNow:0,atk:0,atkCd:0,stag:0,deadT:0,noHead:false,fall:R()<.5?-1:1,wT:R()*3,wx:x,wz:z,gT:2+R()*7,hit:0,
   skin:tank?[.52,.58,.5]:SKIN[(R()*SKIN.length)|0],shirt:tank?[.25,.2,.2]:SHIRT[(R()*SHIRT.length)|0],pants:tank?[.12,.12,.14]:PANTS[(R()*PANTS.length)|0],limp:R()<.25};
  z0.hpMax=z0.hp;if(tank){z0.sp='Hinchado';z0.r=.44}else if(type&&SPDAT[type])spInit(z0,type);zs.push(z0);return z0}
@@ -2266,16 +2266,16 @@ function update(dt){
 // ====================================================== ARMAS: las 11 del generador, en primera persona
 // kind gun: mag, res (reserva; Infinity en la pistola), dmg, rate, auto, pellets, spread, rl (s de recarga), hx (mult. cabeza)
 const WDAT={
- Pistola: {k:'gun',key:'1',mag:15,res:Infinity,dmg:26,rate:.16,auto:0,spread:.012,rl:1.9,hx:2.2,noise:26,rec:.004,pos:[-.16,-.17,.40],fa:1},
- Revolver:{k:'gun',key:'2',mag:6,res:30,dmg:58,rate:.45,auto:0,spread:.008,rl:3.2,hx:2.5,noise:32,rec:.012,pos:[-.16,-.17,.40],fa:1.3},
- Bombeo:  {k:'gun',key:'3',mag:6,res:30,dmg:11,rate:.95,auto:0,pellets:9,spread:.07,rl:3.0,hx:1.6,noise:40,rec:.016,pos:[-.14,-.19,.36],fa:1.4},
- Recortada:{k:'gun',key:'4',mag:2,res:20,dmg:13,rate:.3,auto:0,pellets:11,spread:.11,rl:2.6,hx:1.5,noise:42,rec:.022,pos:[-.14,-.18,.34],fa:1.6},
- Fusil:   {k:'gun',key:'5',mag:20,res:120,dmg:19,rate:1/10,auto:1,spread:.012,rl:2.9,hx:3,noise:34,rec:.0055,pos:[-.13,-.19,.34],fa:1.8},
- Rifle:   {k:'gun',key:'6',mag:5,res:30,dmg:75,rate:1.2,auto:0,spread:.003,rl:3.4,hx:3,noise:38,rec:.02,pos:[-.13,-.19,.36],fa:2.4},
- Stillson:{k:'melee',key:'7',auto:1,dmg:60,rate:.27,reach:2.6,arc:1.35,sw:.5,pos:[-.2,-.28,.32]},
- Cano:    {k:'melee',key:'8',auto:1,dmg:46,rate:.21,reach:2.8,arc:1.45,sw:.4,pos:[-.2,-.3,.3]},
- Hacha:   {k:'melee',key:'9',auto:1,dmg:115,rate:.34,reach:2.6,arc:1.3,sw:.55,pos:[-.2,-.3,.3]},
- Molotov: {k:'throw',key:'0',n:3,rate:1.2,pos:[-.2,-.22,.36]},
+ Pistola: {k:'gun',key:'1',mag:15,res:Infinity,dmg:34,rate:.13,auto:0,spread:.012,rl:1.9,hx:2.2,noise:26,rec:.004,pos:[-.16,-.17,.40],fa:1},
+ Revolver:{k:'gun',key:'2',mag:6,res:30,dmg:95,rate:.38,pen:1,auto:0,spread:.008,rl:3.2,hx:2.5,noise:32,rec:.012,pos:[-.16,-.17,.40],fa:1.3},
+ Bombeo:  {k:'gun',key:'3',mag:6,res:30,dmg:20,rate:.72,auto:0,pellets:12,spread:.1,pen:2,kb:1.4,rl:3.0,hx:1.6,noise:40,rec:.016,pos:[-.14,-.19,.36],fa:1.4},
+ Recortada:{k:'gun',key:'4',mag:2,res:20,dmg:20,rate:.28,auto:0,pellets:14,spread:.15,pen:2,kb:1.8,rl:2.6,hx:1.5,noise:42,rec:.022,pos:[-.14,-.18,.34],fa:1.6},
+ Fusil:   {k:'gun',key:'5',mag:20,res:120,dmg:34,rate:1/11,pen:1,auto:1,spread:.012,rl:2.9,hx:3,noise:34,rec:.0055,pos:[-.13,-.19,.34],fa:1.8},
+ Rifle:   {k:'gun',key:'6',mag:5,res:30,dmg:190,rate:1.0,pen:3,auto:0,spread:.003,rl:3.4,hx:3,noise:38,rec:.02,pos:[-.13,-.19,.36],fa:2.4},
+ Stillson:{k:'melee',key:'7',auto:1,dmg:75,rate:.27,reach:3.2,arc:1.75,sw:.5,pos:[-.2,-.28,.32]},
+ Cano:    {k:'melee',key:'8',auto:1,dmg:58,rate:.21,reach:3.4,arc:1.8,sw:.4,pos:[-.2,-.3,.3]},
+ Hacha:   {k:'melee',key:'9',auto:1,dmg:140,rate:.32,reach:3.1,arc:1.7,sw:.55,pos:[-.2,-.3,.3]},
+ Molotov: {k:'throw',key:'0',n:4,rate:1.2,pos:[-.2,-.22,.36]},
  Bengala: {k:'throw',key:'KeyG',n:3,rate:1.0,pos:[-.2,-.22,.36]}};
 const WORDER=['Pistola','Revolver','Bombeo','Recortada','Fusil','Rifle','Stillson','Cano','Hacha','Molotov','Bengala'];
 const WNAME={Pistola:'Pistola 9 mm',Revolver:'Revólver .38',Bombeo:'Escopeta de bombeo',Recortada:'Recortada',Fusil:'FAL',Rifle:'Rifle con mira',Stillson:'Llave Stillson',Cano:'Caño',Hacha:'Hacha',Molotov:'Molotov',Bengala:'Bengala'};
@@ -2289,10 +2289,13 @@ function wReload(){const n=wCur(),d=WDAT[n],s=WS[n];if(d.k!=='gun'||WRL>0||s.mag
  setTimeout(()=>AU.reload(1),d.rl*450);setTimeout(()=>AU.reload(2),d.rl*800)}
 function shotRay(d,dmgMul){const f=fwd(),sp=d.spread+(P.scope?.15:1)*(P.moving*.01+P.heat*.012);
  let dx=f[0]+(R()-.5)*sp*2,dy=f[1]+(R()-.5)*sp*2,dz=f[2]+(R()-.5)*sp*2;const l=Math.hypot(dx,dy,dz);dx/=l;dy/=l;dz/=l;
- const ey=eyeY(),h=castRay(P.x,ey,P.z,dx,dy,dz,70);
+ const ey=eyeY();let h=castRay(P.x,ey,P.z,dx,dy,dz,70);const hid=[];let mul=1;
+ for(let pn=0;h.type==='zombie'&&pn<(d.pen||0);pn++){const z=h.z,dist=h.t,fall=d.pellets?Math.max(.35,1-dist/14):1;hurtZ(z,d.dmg*dmgMul*mul*(P.scope?1.35:1)*fall*(h.head?d.hx:1)*(z.tank?.6:1),h.head,dx,dz,h.x,h.y,h.z2);if(d.kb&&!z.tank&&z.state!=='dead'){z.vx+=dx*d.kb;z.vz+=dz*d.kb;z.stag=Math.max(z.stag,.18)}
+  z.hidden=true;hid.push(z);mul*=.6;h=castRay(P.x,ey,P.z,dx,dy,dz,70)}
+ for(const z of hid)z.hidden=false;dmgMul*=mul;
  const mx=P.x+f[0]*.9-Math.cos(P.yaw)*-.12,my=ey-.13+f[1]*.9,mz=P.z+f[2]*.9-Math.sin(P.yaw)*.12;
  tracers.push({x0:mx,y0:my,z0:mz,x1:h.x,y1:h.y,z1:h.z2,life:.06});
- if(h.type==='zombie'){const dist=h.t,fall=d.pellets?Math.max(.25,1-dist/9):1;hurtZ(h.z,d.dmg*dmgMul*(P.scope?1.35:1)*fall*(h.head?d.hx:1)*(h.z.tank?.6:1),h.head,dx,dz,h.x,h.y,h.z2)}
+ if(h.type==='zombie'){const dist=h.t,fall=d.pellets?Math.max(.35,1-dist/14):1;hurtZ(h.z,d.dmg*dmgMul*(P.scope?1.35:1)*fall*(h.head?d.hx:1)*(h.z.tank?.6:1),h.head,dx,dz,h.x,h.y,h.z2);if(d.kb&&!h.z.tank&&h.z.state!=='dead'){h.z.vx+=dx*d.kb;h.z.vz+=dz*d.kb;h.z.stag=Math.max(h.z.stag,.18)}}
  else if(h.type==='wall'||h.type==='floor'){spark(h.x,h.y,h.z2,h.nx,h.ny,h.nz);const th=.012,sx=Math.abs(h.nx)>.5?th:.18,sy=Math.abs(h.ny)>.5?th:.18,sz=Math.abs(h.nz)>.5?th:.18;
   decals.push({m:decalM(h.x+h.nx*.01,h.y+h.ny*.01,h.z2+h.nz*.01,sx,sy,sz,0),layer:7,c:[1,1,1]});if(decals.length>200)decals.shift()}}
 function wFire(){const n=wCur(),d=WDAT[n],s=WS[n];if(WCD>0||WRL>0||P.hp<=0||P.sprint)return;
@@ -2302,18 +2305,21 @@ function wFire(){const n=wCur(),d=WDAT[n],s=WS[n];if(WCD>0||WRL>0||P.hp<=0||P.sp
   const k=d.rec*(.8+R()*.5);P.pitch+=k;P.rk+=k;P.yaw+=(R()-.5)*d.rec*.6;P.shake=Math.max(P.shake,.1+d.rec*4);
   if(s.mag<=0&&s.res>0)setTimeout(wReload,250)}
  else if(d.k==='melee'){WCD=d.rate;WANIM='swing';WAT=0;WSWT=d.sw*.3;AU.shove();
-  const f=fwd();let hit=false,nh=0;P.pvx+=Math.sin(P.yaw)*2.2;P.pvz+=Math.cos(P.yaw)*2.2;WCOMBO=(WCOMBO+1)%2;for(const z of zs){if(z.state==='dead'||z.hidden)continue;const dx=z.x-P.x,dz=z.z-P.z,dd=Math.hypot(dx,dz);if(dd>d.reach)continue;
+  const f=fwd();let hit=false,nh=0;P.pvx+=Math.sin(P.yaw)*2.2;P.pvz+=Math.cos(P.yaw)*2.2;WCOMBO=(WCOMBO+1)%2;
+  {const sg=WCOMBO?1:-1,ey=eyeY(),rxv=-Math.cos(P.yaw),rzv=Math.sin(P.yaw);setTimeout(()=>{for(let k=0;k<=14;k++){const tt=k/14*2-1,lat=sg*tt*1.15,ht=-tt*.5,fd=1.25+(1-tt*tt)*.45;
+    parts.push({x:P.x+Math.sin(P.yaw)*fd+rxv*lat,y:ey-.15+ht,z:P.z+Math.cos(P.yaw)*fd+rzv*lat,vx:rxv*sg*2.5,vy:-.8,vz:rzv*sg*2.5,life:.12+k*.006,sz:.03,c:[1,.95,.85],e:1.4,g:0})}},d.sw*120)}for(const z of zs){if(z.state==='dead'||z.hidden)continue;const dx=z.x-P.x,dz=z.z-P.z,dd=Math.hypot(dx,dz);if(dd>d.reach)continue;
    const a=Math.atan2(dx,dz)-P.yaw;if(Math.abs(((a+9.4247)%6.2832)-3.1416)>d.arc)continue;
    const head=P.pitch>.12&&dd<1.6;hurtZ(z,d.dmg*(head?1.8:1)*(z.tank?.6:1),head,dx/dd,dz/dd,z.x-dx/dd*.3,1.2,z.z-dz/dd*.3);if(!z.tank){z.stag=Math.max(z.stag,.5);const kb=(1.6-dd/d.reach*.6)*(n==='Hacha'?4.5:6);z.vx=dx/dd*kb;z.vz=dz/dd*kb}hit=true;nh++}
   if(hit){P.shake=Math.max(P.shake,.2+Math.min(nh,4)*.1);P.kick=Math.max(P.kick,.5)}noise(P.x,P.z,8)}
  else if(d.k==='throw'){if(s.res<=0){AU.click();WCD=.4;return}s.res--;WCD=d.rate;WANIM='use';WAT=0;const f=fwd();
   THROWS.push({kind:n,x:P.x+f[0]*.5,y:eyeY()-.1,z:P.z+f[2]*.5,vx:f[0]*11+P.pvx,vy:f[1]*11+3.5,vz:f[2]*11+P.pvz,t:0,spin:R()*6});AU.noise(.12,'bandpass',600,1800,.25,0,.1)}}
-function throwsUpdate(dt){if(P.poison>0&&P.hp>0){P.poison-=dt;P.hp-=3.2*dt;P.regen=Math.max(P.regen||0,2);if(P.hp<=0)hurtP(1,P.x,P.z)}{const pv=document.getElementById('pois');if(pv)pv.style.opacity=P.poison>0?Math.min(.75,P.poison*.22+.15*Math.sin(time*6)+.15):0}
+function throwsUpdate(dt){zFireUpdate(dt);if(P.poison>0&&P.hp>0){P.poison-=dt;P.hp-=3.2*dt;P.regen=Math.max(P.regen||0,2);if(P.hp<=0)hurtP(1,P.x,P.z)}{const pv=document.getElementById('pois');if(pv)pv.style.opacity=P.poison>0?Math.min(.75,P.poison*.22+.15*Math.sin(time*6)+.15):0}
  for(let i=THROWS.length-1;i>=0;i--){const q=THROWS[i];q.t+=dt;q.vy-=(q.kind==='Veneno'?4:9.8)*dt;const nx=q.x+q.vx*dt,ny=q.y+q.vy*dt,nz=q.z+q.vz*dt;
   if((q.kind==='Veneno'||q.kind==='Acido')&&Math.hypot(q.x-P.x,q.z-P.z)>1.8){for(let k=0;k<2;k++)parts.push({x:q.x+(R()-.5)*.12,y:q.y+(R()-.5)*.12,z:q.z+(R()-.5)*.12,vx:-q.vx*.05,vy:-.2,vz:-q.vz*.05,life:.35,sz:q.kind==='Veneno'?.045:.04,c:[.35,1,.15],e:2.2,g:.2})}
   if(q.kind==='Veneno'&&P.hp>0&&Math.hypot(nx-P.x,nz-P.z)<.55&&ny>P.y&&ny<P.y+1.95){THROWS.splice(i,1);hurtP(9,q.x,q.z);P.poison=4.5;msg('¡Veneno! Te está quemando',2);continue}
-  const wall=solidAt(CXo(nx),CXo(nz))||ny>WH-.05;if(wall||ny<=.08||q.t>6){const x=wall?q.x:nx,z=wall?q.z:nz;THROWS.splice(i,1);
-   if(q.kind==='Molotov'){FIRES.push({x,z,t:8,r:2.3});AU.noise(.5,'lowpass',1800,300,.8,0,.4);AU.tone(90,40,.3,'sine',.5,0,.2);for(let k=0;k<40;k++)parts.push({x,y:.1,z,vx:(R()-.5)*7,vy:1+R()*4,vz:(R()-.5)*7,life:.5+R()*.8,sz:.05+R()*.06,c:[1,.5+R()*.3,.1],e:3,g:.4});noise(x,z,22)}
+  let zhit=false;if(q.kind==='Molotov'&&q.t>.08)for(const z of zs){if(z.state==='dead'||z.hidden)continue;if(Math.hypot(z.x-nx,z.z-nz)<z.r+.35&&ny<2.1){zhit=true;z.fireT=Math.max(z.fireT||0,8);break}}
+  const wall=solidAt(CXo(nx),CXo(nz))||ny>WH-.05;if(wall||zhit||ny<=.08||q.t>6){const x=wall?q.x:nx,z=wall?q.z:nz;THROWS.splice(i,1);
+   if(q.kind==='Molotov'){FIRES.push({x,z,t:10,r:3.0});AU.noise(.5,'lowpass',1800,300,.8,0,.4);AU.tone(90,40,.3,'sine',.5,0,.2);for(let k=0;k<40;k++)parts.push({x,y:.1,z,vx:(R()-.5)*7,vy:1+R()*4,vz:(R()-.5)*7,life:.5+R()*.8,sz:.05+R()*.06,c:[1,.5+R()*.3,.1],e:3,g:.4});noise(x,z,22)}
    else if(q.kind==='Veneno'){FIRES.push({x,z,t:3.5,r:1.0,acid:1});for(let k=0;k<16;k++)parts.push({x,y:.15,z,vx:(R()-.5)*4,vy:1+R()*2,vz:(R()-.5)*4,life:.5,sz:.04,c:[.4,.95,.2],e:1.5,g:.6})}
    else if(q.kind==='Acido'){FIRES.push({x,z,t:6,r:1.8,acid:1});AU.noise(.4,'bandpass',400,1200,.5,0,.3);for(let k=0;k<24;k++)parts.push({x,y:.1,z,vx:(R()-.5)*5,vy:1+R()*3,vz:(R()-.5)*5,life:.5+R()*.6,sz:.04,c:[.4,.9,.2],e:1.5,g:.6})}
    else{FLARES.push({x,z,t:28});AU.noise(.3,'highpass',2000,6000,.5,0,.2);for(const zz of zs)if(zz.state==='idle'&&Math.hypot(zz.x-x,zz.z-z)<26)wake(zz,false)}
@@ -2321,16 +2327,16 @@ function throwsUpdate(dt){if(P.poison>0&&P.hp>0){P.poison-=dt;P.hp-=3.2*dt;P.reg
   q.x=nx;q.y=ny;q.z=nz;if(q.kind==='Bengala'&&R()<.6)parts.push({x:q.x,y:q.y,z:q.z,vx:(R()-.5),vy:R()*.5,vz:(R()-.5),life:.3,sz:.03,c:[1,.3,.2],e:3,g:0})}
  for(let i=FIRES.length-1;i>=0;i--){const f=FIRES[i];f.t-=dt;if(f.t<=0){FIRES.splice(i,1);continue}const k=Math.min(1,f.t/1.5);
   if(f.acid){for(let j=0;j<2;j++){const a=R()*6.28,rr=R()*f.r;parts.push({x:f.x+Math.cos(a)*rr,y:.03,z:f.z+Math.sin(a)*rr,vx:0,vy:.3+R()*.5,vz:0,life:.6,sz:.04*k,c:[.35,.9,.2],e:1.2,g:-.05})}if(Math.hypot(P.x-f.x,P.z-f.z)<f.r+.2&&P.hp>0){P.hp-=14*dt;P.hurt=Math.min(1,P.hurt+dt*2);if(P.hp<=0)hurtP(1,f.x,f.z)}continue}
-  for(let j=0;j<4;j++){const a=R()*6.28,rr=R()*f.r;parts.push({x:f.x+Math.cos(a)*rr,y:.05,z:f.z+Math.sin(a)*rr,vx:(R()-.5)*.6,vy:1.2+R()*2,vz:(R()-.5)*.6,life:.35+R()*.5,sz:(.06+R()*.1)*k,c:[1,.35+R()*.45,.05],e:2.5,g:-.15})}
+  for(let j=0;j<4;j++){const a=R()*6.28,rr=R()*f.r;parts.push({x:f.x+Math.cos(a)*rr,y:.05,z:f.z+Math.sin(a)*rr,vx:(R()-.5)*.6,vy:1.2+R()*2,vz:(R()-.5)*.6,life:.35+R()*.5,sz:(.06+R()*.1)*k,c:[1,.1+R()*.35,.03],e:1.7,g:-.15})}
   if(R()<.5)parts.push({x:f.x+(R()-.5)*f.r,y:.6,z:f.z+(R()-.5)*f.r,vx:0,vy:1.5,vz:0,life:1.2,sz:.12,c:[.15,.13,.12],e:0,g:-.1});
   if(f.st){const bg=f.r>1;for(let j=0;j<(bg?6:4);j++){const aa=R()*6.28,rr=R()*f.r*.8,u=R();parts.push({x:f.x+Math.cos(aa)*rr,y:.1+R()*.8,z:f.z+Math.sin(aa)*rr,vx:(R()-.5)*.6,vy:1.6+R()*3,vz:(R()-.5)*.6,life:.4+R()*.6,sz:.14+u*.34,c:[1,.08+u*.38,.02],e:1.7,g:-.4})}
    parts.push({x:f.x+(R()-.5)*f.r,y:1.2,z:f.z+(R()-.5)*f.r,vx:(R()-.5)*.8+.6,vy:2.2+R()*1.5,vz:(R()-.5)*.8,life:2.4+R()*1.4,sz:.5+R()*.5,c:[.1,.09,.09],e:0,g:-.15});if(R()<.35)parts.push({x:f.x,y:.4,z:f.z,vx:(R()-.5)*3,vy:3+R()*4,vz:(R()-.5)*3,life:.7+R()*.6,sz:.04,c:[1,.6,.15],e:4,g:.9})}
-  for(const z of zs){if(z.state==='dead')continue;if(Math.hypot(z.x-f.x,z.z-f.z)<f.r+z.r){z.hp-=22*dt;z.burn=.3;if(z.state==='idle')wake(z,false);if(z.hp<=0)killZ(z,false,(z.x-f.x)/(Math.hypot(z.x-f.x,z.z-f.z)||1),(z.z-f.z)/(Math.hypot(z.x-f.x,z.z-f.z)||1))}}
+  for(const z of zs){if(z.state==='dead')continue;if(Math.hypot(z.x-f.x,z.z-f.z)<f.r+z.r){z.hp-=30*dt;z.burn=.3;if(!f.st||R()<dt*.5)z.fireT=Math.max(z.fireT||0,f.st?4:7);if(z.state==='idle')wake(z,false);if(z.hp<=0)killZ(z,false,(z.x-f.x)/(Math.hypot(z.x-f.x,z.z-f.z)||1),(z.z-f.z)/(Math.hypot(z.x-f.x,z.z-f.z)||1))}}
   if(Math.hypot(P.x-f.x,P.z-f.z)<f.r+.2&&P.hp>0){P.hp-=12*dt;P.hurt=Math.min(1,P.hurt+dt*2);if(P.hp<=0)hurtP(1,f.x,f.z)}}
  for(let i=FLARES.length-1;i>=0;i--){const f=FLARES[i];f.t-=dt;if(f.t<=0){FLARES.splice(i,1);continue}
   if(R()<.8)parts.push({x:f.x+(R()-.5)*.1,y:.1,z:f.z+(R()-.5)*.1,vx:(R()-.5)*1.5,vy:1+R()*2.5,vz:(R()-.5)*1.5,life:.2+R()*.3,sz:.025,c:[1,.25,.15],e:4,g:.5})}}
 // luces de fuego y bengalas para el render (se agregan a los candidatos)
-function fxLights(cand){for(const f of FIRES){const e=Math.min(1,f.t/1.5)*(.85+.15*Math.sin(time*23+f.x));cand.push([Math.hypot(f.x-P.x,f.z-P.z),{x:f.x,z:f.z,t:7,y:f.acid?.2:.9,c:f.acid?[.3,1,.2]:[1,.5,.15],I:(f.acid?1.5:4.5)*e,R:f.acid?5:9},e])}
+function fxLights(cand){for(const z of zs)if(z.fireT>0)cand.push([Math.hypot(z.x-P.x,z.z-P.z),{x:z.x,z:z.z,t:7,y:1,c:[1,.5,.15],I:3.2,R:7},1]);for(const f of FIRES){const e=Math.min(1,f.t/1.5)*(.85+.15*Math.sin(time*23+f.x));cand.push([Math.hypot(f.x-P.x,f.z-P.z),{x:f.x,z:f.z,t:7,y:f.acid?.2:.9,c:f.acid?[.3,1,.2]:[1,.5,.15],I:(f.acid?1.5:4.5)*e,R:f.acid?5:9},e])}
  for(const f of FLARES){const e=Math.min(1,f.t/3)*(.8+.2*Math.sin(time*31+f.z));cand.push([Math.hypot(f.x-P.x,f.z-P.z),{x:f.x,z:f.z,t:7,y:.3,c:[1,.15,.1],I:5*e,R:11},e])}}
 function wScope(){if(wCur()==='Rifle'&&!P.sprint&&WRL<=0&&P.hp>0){P.scope=P.scope?0:1;AU.click()}}
 document.addEventListener('mousedown',e=>{if(e.button===1&&S==='play'){e.preventDefault();wScope()}});
@@ -2347,7 +2353,8 @@ function wQueue(){if(P.hp<=0||VISOR||P.scz>.5)return;const n=wCur(),d=WDAT[n],w=
  let [gx,gy,gz]=d.pos;gx+=bob;gy+=bobY;gz-=P.kick*.03;let rx=P.kick*.03,ry=0,rz=0;
  if(WRL>0){const r=1-WRL/d.rl,dip=Math.sin(Math.PI*r);gy-=dip*.08;rx+=dip*.4;ry=dip*.3}
  if(P.shoveT>.2){const q=(P.shoveT-.2)/.25,e=Math.sin(Math.PI*(1-q));gz+=e*.15;gx+=e*.08;ry-=e*.4;rx-=e*.2}
- if(d.k==='melee'){rx+=-1.15;ry+=.35;rz+=-.25;gy+=.12}             // empuñada: el mango hacia abajo-adelante
+ if(d.k==='melee'){rx+=-1.15;ry+=.35;rz+=-.25;gy+=.12;
+  if(WANIM==='swing'){const u=Math.min(1,WAT/d.sw),sg=WCOMBO?1:-1,p=u<.18?-(u/.18):u<.5?-1+2*((u-.18)/.32):1-(u-.5)/.5;gx+=sg*p*.3;gy+=-p*.17+.05;rz+=sg*p*.95;ry+=-sg*p*.55;rx+=(1-Math.abs(p))*.35;gz+=(1-Math.abs(p))*.14}}             // empuñada: el mango hacia abajo-adelante
  if(d.k==='throw'){rx+=-.6;ry+=.3;gy+=.1}
  // animación propia del arma (retroceso, cargador, corredera, giro del molotov)
  let a=WANIM,t=WAT;if(d.k==='gun'&&a==='fire')t=WAT;if(d.k==='gun'&&a==='reload')t=(1-WRL/d.rl)*({Pistola:3.2,Revolver:4,Bombeo:3.4,Recortada:3.6,Fusil:3.6,Rifle:3.4}[n]||3.4);
@@ -2361,17 +2368,25 @@ document.addEventListener('keydown',e=>{if(S!=='play')return;const c=e.code;
  for(let i=0;i<WORDER.length;i++){const k=WDAT[WORDER[i]].key;if((k.length===1&&c==='Digit'+k)||c===k){wSel(i);return}}});
 document.addEventListener('wheel',e=>{if(S!=='play')return;wSel((WI+(e.deltaY>0?1:WORDER.length-1))%WORDER.length)});
 (()=>{const w=document.createElement('div');w.id='wname';w.style.cssText='position:absolute;right:28px;bottom:78px;font-size:13px;letter-spacing:.08em;opacity:.8;text-shadow:0 2px 4px #000';$('hud').appendChild(w)})();
+// ---- v24.8: zombis prendidos fuego (corren ardiendo, contagian, quedan humeando)
+function zFireUpdate(dt){for(const z of zs){if(!(z.fireT>0))continue;z.fireT-=dt;const alive=z.state!=='dead';const d=Math.hypot(z.x-P.x,z.z-P.z);
+ if(alive){z.hp-=16*dt;z.burn=.3;if(z.state==='idle')wake(z,false);if(z.hp<=0){killZ(z,false,0,0);z.fireT=Math.max(z.fireT,3)}
+  if(R()<dt*1.2)for(const o of zs)if(o!==z&&o.state!=='dead'&&!(o.fireT>0)&&Math.hypot(o.x-z.x,o.z-z.z)<1.0){o.fireT=5;break}
+  if(d<1.3&&P.hp>0&&R()<dt*2){P.hp-=4;P.hurt=Math.min(1,P.hurt+.3)}}
+ if(d>45)continue;const top=alive?(z.fy||0)+1.75*(z.sc||1):.45,base=alive?(z.fy||0)+.15:.05,n=alive?4:2;
+ for(let j=0;j<n;j++){const u=R(),h=base+R()*(top-base);parts.push({x:z.x+(R()-.5)*.45,y:h,z:z.z+(R()-.5)*.45,vx:(R()-.5)*.5+(z.vx||0)*.2,vy:1.4+R()*1.8,vz:(R()-.5)*.5+(z.vz||0)*.2,life:.25+R()*.35,sz:.06+u*.11,c:[1,.07+u*.33,.02],e:1.55,g:-.5})}
+ if(R()<.4)parts.push({x:z.x,y:top+.2,z:z.z,vx:(R()-.5)*.4,vy:1.6,vz:(R()-.5)*.4,life:1.4,sz:.22+R()*.2,c:[.09,.08,.08],e:0,g:-.15})}}
 
 // ====================================================== INFECTADOS ESPECIALES
 // Hinchado = el "tank" del prototipo. Los demás tienen stats propias y un comportamiento corto en spUpdate().
 const SPDAT={
- Polilla:  {hp:30, spd:5.6,dmg:4, reach:1.1,atk:.3,cd:.55,r:.26},
- Acequiero:{hp:170,spd:1.7,dmg:18,reach:1.2,atk:.6,cd:1.6,r:.4},
- Imitador: {hp:70, spd:5.2,dmg:16,reach:1.1,atk:.4,cd:1.1,r:.3},
- Topo:     {hp:90, spd:4.2,dmg:20,reach:1.1,atk:.45,cd:1.4,r:.32},
- Garrafero:{hp:120,spd:3.8,dmg:10,reach:1.4,atk:.5,cd:1.5,r:.4},
- Polvillo: {hp:80, spd:1.3,dmg:7, reach:1.1,atk:.5,cd:1.2,r:.34},
- Hinchado: {hp:1300,spd:4.3,dmg:32,reach:1.7,atk:.75,cd:1.7,r:.44}};
+ Polilla:  {hp:75, spd:5.6,dmg:4, reach:1.1,atk:.3,cd:.55,r:.26},
+ Acequiero:{hp:420,spd:1.7,dmg:18,reach:1.2,atk:.6,cd:1.6,r:.4},
+ Imitador: {hp:190, spd:5.2,dmg:16,reach:1.1,atk:.4,cd:1.1,r:.3},
+ Topo:     {hp:240, spd:4.2,dmg:20,reach:1.1,atk:.45,cd:1.4,r:.32},
+ Garrafero:{hp:300,spd:3.8,dmg:10,reach:1.4,atk:.5,cd:1.5,r:.4},
+ Polvillo: {hp:220, spd:1.3,dmg:7, reach:1.1,atk:.5,cd:1.2,r:.34},
+ Hinchado: {hp:2600,spd:4.3,dmg:32,reach:1.7,atk:.75,cd:1.7,r:.44}};
 const SPNAME={Polilla:'Polilla',Acequiero:'Acequiero',Imitador:'Imitador',Topo:'Topo',Garrafero:'Garrafero',Polvillo:'Polvillo',Hinchado:'Hinchado'};
 const LVL_SP=[['Polilla','Imitador'],['Topo','Polvillo','Acequiero'],['Garrafero','Polilla','Acequiero'],['Imitador','Topo','Garrafero'],['Polilla','Acequiero','Garrafero','Topo','Polvillo']];
 let spCd=40;
