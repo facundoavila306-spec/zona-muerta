@@ -84,7 +84,7 @@ function lookDir(o,ex,ey,ez,fx,fy,fz){let sx=-fz,sz=fx;const sl=Math.hypot(sx,sz
 
 // ====================================================== GL
 const cv=$('c');
-const gl=cv.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'});
+const gl=cv.getContext('webgl2',{antialias:false,alpha:false,powerPreference:'high-performance'});
 if(!gl){document.body.innerHTML='<p style="padding:40px">Este navegador no tiene WebGL2.</p>';throw new Error('sin webgl2')}
 function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error('SHADER',gl.getShaderInfoLog(s));throw new Error('shader: '+gl.getShaderInfoLog(s))}return s}
 function prog(vs,fs){const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,vs));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error('link: '+gl.getProgramInfoLog(p));return p}
@@ -931,7 +931,11 @@ function quadBox(A,B,C,D,e){const abx=B[0]-A[0],aby=B[1]-A[1],abz=B[2]-A[2],adx=
  CUR.add(_q,e.tint[0],e.tint[1],e.tint[2],1,e.layer,e.uvs,e.emi,e.mode)}
 function matOf(m,k){const n=typeof m==='string'?m:(k in m?m[k]:m.a);return MLAY[n]||MLAY.white||{tint:[1,1,1],layer:8,uvs:1,emi:0,mode:0}}
 let SBC=[],CUR=null;const CHK=80;
-function drawSB(maxD){for(const c of SBC){if(c.ib.n&&Math.hypot(c.x-P.x,c.z-P.z)<maxD+CHK*.71)c.ib.draw()}}
+let QL=1;try{const q=+localStorage.getItem('zmQL');if(q>=0&&q<=3)QL=q}catch(e){}
+const QLV=[{n:'BAJA',dd:120,rs:.55},{n:'MEDIA',dd:175,rs:.75},{n:'ALTA',dd:240,rs:1},{n:'ULTRA',dd:300,rs:1.25}];
+function drawSB(maxD,cone){const fl=Math.hypot(P.fx,P.fz)||1,nx=P.fx/fl,nz=P.fz/fl;const hf=Math.atan(Math.tan(.73)*(aspect||1.78))+.1;
+ for(const c of SBC){if(!c.ib.n)continue;const dx=c.x-P.x,dz=c.z-P.z,d=Math.hypot(dx,dz);if(d>maxD+CHK*.71)continue;
+  if(cone&&c.ib!==SB&&d>CHK*.9){const a=Math.asin(Math.min(1,CHK*.75/d));if((dx*nx+dz*nz)/d<Math.cos(Math.min(3.1,hf+a)))continue}c.ib.draw()}}
 function boxFaces(c,ib){const{x0,y0,z0,x1,y1,z1}=c;CUR=ib;const dx=x1-x0,dy=y1-y0,dz=z1-z0,thin=Math.min(dx,dy,dz)<.12;
  if(!thin||dy<.12)quadBox([x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1],matOf(c.m,'t'));
  if(y0>.05&&(!thin||dy<.12))quadBox([x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0],matOf(c.m,'b'));
@@ -1961,7 +1965,7 @@ function visorLabels(){if(!VISOR)return;
   const m=VPM;const cx=m[0]*x+m[4]*y+m[8]*z+m[12],cy=m[1]*x+m[5]*y+m[9]*z+m[13],cw=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(cw<=.1){e.style.display='none';return}const sx=(cx/cw*.5+.5)*innerWidth,sy=(1-(cy/cw*.5+.5))*innerHeight;
   const d=Math.hypot(x-P.x,z-P.z);e.style.display=d<16?'block':'none';e.style.left=sx+'px';e.style.top=sy+'px';e.style.opacity=Math.max(.3,1-d/16);e.textContent=v.name})}
-document.addEventListener('keydown',e=>{if(VISOR&&e.code==='KeyT'){visAnim=(visAnim+1)%VIS_ANIMS.length;msg('Animación: '+VIS_ANIMS[visAnim],1.5)}});
+document.addEventListener('keydown',e=>{if(e.code==='F2'&&S==='play'){e.preventDefault();QL=(QL+1)%QLV.length;try{localStorage.setItem('zmQL',QL)}catch(x){}msg('Calidad: '+QLV[QL].n+' (F2 para cambiar)',2)}});document.addEventListener('keydown',e=>{if(VISOR&&e.code==='KeyT'){visAnim=(visAnim+1)%VIS_ANIMS.length;msg('Animación: '+VIS_ANIMS[visAnim],1.5)}});
 
 // ====================================================== ESTADO
 const P={x:0,z:0,y:0,vy:0,yaw:0,pitch:0,hp:100,mag:30,res:120,reload:0,rph:0,fireT:0,shoveT:0,shoveA:0,kick:0,heat:0,rk:0,bob:0,fl:true,fx:0,fy:0,fz:1,pvx:0,pvz:0,hurt:0,shake:0,mf:0,moving:0,kills:0,t:0,inten:0,regen:0};
@@ -2437,7 +2441,7 @@ function buildDyn(){
 
 // ---- render
 let aspect=1;
-function resize(){const dpr=Math.min(window.devicePixelRatio||1,1.5);const w=Math.floor(innerWidth*dpr),h=Math.floor(innerHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}aspect=w/h}
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,1.5)*QLV[QL].rs;const w=Math.floor(innerWidth*dpr),h=Math.floor(innerHeight*dpr);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}aspect=w/h}
 const PM=new Float32Array(16),VM=new Float32Array(16),VPM=new Float32Array(16),LP=new Float32Array(16),LV=new Float32Array(16),LVP=new Float32Array(16);
 const PPOS=new Float32Array(32),PCOL=new Float32Array(24);
 function render(){
@@ -2467,7 +2471,7 @@ function render(){
  gl.uniformMatrix4fv(U.u_vp,false,VPM);gl.uniformMatrix4fv(U.u_lvp,false,LVP);gl.uniform3f(U.u_cam,P.x,ey,P.z);
  gl.uniform4f(U.u_fl,fpx,fpy,fpz,(P.fl&&P.hp>0)?(7.5*(.97+.03*Math.sin(time*40))):0);gl.uniform3f(U.u_fdir,P.fx,P.fy,P.fz);gl.uniform3f(U.u_fcol,1,.95,.85);gl.uniform2f(U.u_fcone,Math.cos(30*Math.PI/180),Math.cos(9*Math.PI/180));
  gl.uniform4fv(U.u_pp,PPOS);gl.uniform3fv(U.u_pc,PCOL);{const k=LVL.city?dayLight():0;gl.uniform3f(U.u_amb,LVL.amb[0]+k*.42,LVL.amb[1]+k*.43,LVL.amb[2]+k*.46);gl.uniform1f(U.u_fogd,LVL.fog||.03);gl.uniform1f(U.u_time,time%100);gl.uniform3f(U.u_fogc,.008+k*.42,.011+k*.52,.016+k*.7)}
- };setU(pMain,U);drawSB(260);DB.draw();FB.draw();setU(pChar,U2);drawChars(false);
+ };setU(pMain,U);drawSB(QLV[QL].dd,true);DB.draw();FB.draw();setU(pChar,U2);drawChars(false);
  gl.clear(gl.DEPTH_BUFFER_BIT);setU(pChar,U2);drawChars(false,true);
 }
 function hud(){
