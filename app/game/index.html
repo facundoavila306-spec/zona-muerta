@@ -31,14 +31,14 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #ov .k{display:inline-block;margin:10px auto 0;text-align:left;font-size:15px;line-height:1.7;opacity:.9}
 #ov .k b{display:inline-block;min-width:92px;color:#e8c27a}
 #ov .go{margin-top:22px;font-size:20px;letter-spacing:.14em;color:#e8c27a}
-#ld{position:fixed;inset:0;z-index:999;background:#05080c;color:#cfe3f5;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 15px system-ui,sans-serif;letter-spacing:.2em}
+#pois{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;background:radial-gradient(ellipse at center,rgba(60,200,40,0) 45%,rgba(60,200,40,.55) 100%);transition:opacity .2s}#ld{position:fixed;inset:0;z-index:999;background:#05080c;color:#cfe3f5;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 15px system-ui,sans-serif;letter-spacing:.2em}
 #ld h1{font-size:44px;letter-spacing:.25em;margin:0 0 6px;color:#e8eef5}#ld p{margin:0 0 30px;opacity:.7;letter-spacing:.12em;font-size:13px}
 #ld .bar{width:min(420px,70vw);height:6px;background:#16202b;border-radius:3px;overflow:hidden}#ld .bar i{display:block;width:40%;height:100%;background:#c24a3a;animation:ldm 1.1s ease-in-out infinite alternate}
 @keyframes ldm{from{transform:translateX(-30%)}to{transform:translateX(160%)}}
 .mb{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}.mb button{font:600 14px system-ui,sans-serif;letter-spacing:.12em;padding:10px 18px;background:#0e151d;color:#cfe3f5;border:1px solid #2b3b4c;border-radius:4px;cursor:pointer}.mb button:hover{background:#1b2a3a}#bm{margin-top:10px;font-size:13px;opacity:.85;min-height:18px}
 </style></head><body><div id="ld"><h1>ZONA MUERTA</h1><p>Neuquén centro</p><div class="bar"><i></i></div><p style="margin-top:22px">CARGANDO LA CIUDAD…</p></div>
 <canvas id="c"></canvas>
-<div id="hud">
+<div id="pois"></div><div id="hud">
  <div id="vig"></div><div id="hurt"></div>
  <div id="cross"></div>
  <div id="obj"></div><div id="msg"></div><div id="hint"></div>
@@ -644,21 +644,30 @@ const MDEFS=[
  {who:'Alma',item:'Leche en polvo',col:[.95,.95,.9],text:'Para los chicos del refugio. Hay un supermercado La Anónima sobre Brown, cerca de Rivadavia.',from:{spot:'anonima',name:'La Anónima · Brown'},to:'base'},
  {who:'Maxi',item:'Garrafa',col:[.3,.5,.9],text:'En una ferretería de Córdoba y Rivadavia hay garrafas. Traeme una llena.',from:{spot:'ferC',name:'Ferretería · Córdoba y Rivadavia'},to:'base'},
  {who:'Aurelio',item:'Bandera',col:[.45,.7,.95],text:'Última: la bandera del monumento a San Martín, en la rotonda de la avenida. La colgamos en el refugio.',from:{lm:'monumento',name:'Monumento a San Martín'},to:'base'}];
-let MISSIONS=[],MI=-1,MNEXT=0,MDONE=0;
+let MISSIONS=[],MI=-1,MNEXT=0,MDONE=0,MOFF=-1,MREJ=-1;
 function mFromName(d){return d.from.name}
 function mToPos(d){return d.to==='base'?CITY.lm.muni:CITY.lm[d.to.lm]}
 function mToName(d){return d.to==='base'?'el refugio (Municipalidad)':d.to.name}
-function missionsInit(){catInit();MISSIONS=MDEFS.filter(d=>CITY.lm[d.from.lm||d.from.spot]).map(d=>({d,done:false,got:false,pick:null}));MI=-1;MDONE=0;MNEXT=6;LVL.base=CITY.lm.muni}
+function missionsInit(){catInit();MISSIONS=MDEFS.filter(d=>CITY.lm[d.from.lm||d.from.spot]).map(d=>({d,done:false,got:false,pick:null}));MI=-1;MDONE=0;MNEXT=6;MOFF=-1;MREJ=-1;LVL.base=CITY.lm.muni}
 function missionStart(k){MI=k;const m=MISSIONS[k],d=m.d;let sp;
  if(d.from.spot)sp=CITY.spots[d.from.spot]||[CITY.lm[d.from.spot].x,CITY.lm[d.from.spot].z];else{const l=CITY.lm[d.from.lm];sp=l.spots[(R()*l.spots.length)|0]}
- m.pick={t:'q',x:sp[0],z:sp[1],got:false,m};PICKS.push(m.pick);showCard('new',m,k)}
+ m.pick={t:'q',x:sp[0],z:sp[1],got:false,m};PICKS.push(m.pick);mToast(d.who,'Pedido aceptado: '+d.item,'Buscalo en '+mFromName(d)+' · TAB para ver',6)}
+function missionOffer(k){MOFF=k;const d=MISSIONS[k].d;if(TEST){missionAccept();return}mToast(d.who,'Nuevo pedido de '+d.who,d.item+' · TAB para ver y aceptar',12);AU.pick&&AU.pick()}
+function missionAccept(){const k=MOFF;MOFF=-1;if(k>=0)missionStart(k)}
+function missionReject(){const m=MISSIONS[MOFF];if(!m)return;m.rej=(m.rej||0)+1;MREJ=MOFF;MOFF=-1;MNEXT=20;mToast(m.d.who,'Pedido rechazado','Más adelante te van a pedir otra cosa',5)}
+function missionAbandon(){if(MI<0)return;const m=MISSIONS[MI];if(m.done)return;const j=PICKS.indexOf(m.pick);if(j>=0)PICKS.splice(j,1);m.pick=null;m.got=false;m.rej=(m.rej||0)+1;MREJ=MI;MI=-1;MNEXT=20;mToast(m.d.who,'Pedido abandonado','Podés retomarlo más adelante',5)}
+let MTT=0;function mToast(who,a,b,t){const el=document.getElementById('mtoast');if(!el)return;drawPortrait(el.querySelector('canvas'),who);el.querySelector('b').textContent=a;el.querySelector('span').textContent=b;el.classList.add('on');MTT=t||8}
+(()=>{const st=document.createElement('style');st.textContent='#mtoast{position:fixed;right:18px;top:64px;z-index:40;display:flex;gap:10px;align-items:center;background:rgba(12,18,24,.9);border:1px solid #cfe3f5;border-left:4px solid #e8b04a;padding:8px 14px 8px 8px;color:#e8eef2;font:13px system-ui,sans-serif;max-width:340px;transform:translateX(120%);transition:transform .35s ease;pointer-events:none}#mtoast.on{transform:none}#mtoast canvas{position:static!important;inset:auto!important;width:56px!important;height:56px!important;flex:none;display:block}#mtoast b{display:block;font-size:14px;margin-bottom:3px}#mtoast span{opacity:.8}';document.head.appendChild(st);
+ const d=document.createElement('div');d.id='mtoast';d.innerHTML='<canvas width="112" height="112"></canvas><div><b></b><span></span></div>';document.body.appendChild(d)})();
 function missionGot(p){const m=p.m;m.got=true;msg(m.d.item+': lo tenés. Llevalo a '+mToName(m.d),5);say(m.d.who,'¡Lo encontraste! Volvé, y cuidado en el camino.');AU.pick();noise(P.x,P.z,25);if(cityDirT>0)cityDirT=0;citySpawn(3,null,true)}
 function missionsUpdate(){if(!LVL||!LVL.city)return;
- if(MI<0||MISSIONS[MI].done){MNEXT-=1/60;if(MNEXT<=0){const k=MISSIONS.findIndex(m=>!m.done);if(k>=0)missionStart(k);else{MI=-1;MNEXT=999}}return}
+ if(MTT>0){MTT-=1/60;if(MTT<=0){const el=document.getElementById('mtoast');if(el)el.classList.remove('on')}}
+ if(MOFF>=0)return;
+ if(MI<0||MISSIONS[MI].done){MNEXT-=1/60;if(MNEXT<=0){const c=MISSIONS.map((m,k)=>[m,k]).filter(([m])=>!m.done);if(c.length){c.sort((a,b)=>((a[0].rej||0)-(b[0].rej||0))||(a[1]-b[1]));let k=c[0][1];if(k===MREJ&&c.length>1)k=c[1][1];missionOffer(k)}else{MI=-1;MNEXT=999}}return}
  const m=MISSIONS[MI];if(!m.got)return;const t=mToPos(m.d);
- if(Math.hypot(t.x-P.x,t.z-P.z)<7){m.done=true;MDONE++;MNEXT=5;P.hp=Math.min(100,P.hp+30);showCard('done',m,MI);
+ if(Math.hypot(t.x-P.x,t.z-P.z)<7){m.done=true;MDONE++;MNEXT=5;P.hp=Math.min(100,P.hp+30);mToast(m.d.who,'¡Pedido cumplido! '+MDONE+' de '+MISSIONS.length,(MDONE>=MISSIONS.length?'Eso era todo. Ahora sí podemos descansar.':'Gracias, Facundo. Uno menos.')+' · +30 vida y munición',7);
   for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&q.res!==Infinity)q.res=Math.min(d.res*2,q.res+d.mag)}}}
-function missionHud(){if(MI<0)return dayClock()+' · '+(MDONE>=MISSIONS.length?'Todos los pedidos cumplidos. Ciudad libre (M: mapa)':'Esperando el próximo pedido...');
+function missionHud(){if(MOFF>=0)return dayClock()+' · Pedido nuevo de '+MISSIONS[MOFF].d.who+' · TAB para ver';if(MI<0)return dayClock()+' · '+(MDONE>=MISSIONS.length?'Todos los pedidos cumplidos. Ciudad libre (M: mapa)':'Esperando el próximo pedido...');
  const m=MISSIONS[MI],d=m.d;if(m.done)return dayClock()+' · Pedido cumplido';
  if(!m.got){const dd=Math.hypot(m.pick.x-P.x,m.pick.z-P.z)|0;return dayClock()+' · Pedido '+(MI+1)+'/'+MISSIONS.length+' · '+d.item+' en '+mFromName(d)+' · '+dd+' m'+(dd<40?' · ¡Buscá adentro!':'')}
  const t=mToPos(d);return dayClock()+' · Llevá '+d.item+' a '+mToName(d)+' · '+(Math.hypot(t.x-P.x,t.z-P.z)|0)+' m'}
@@ -735,11 +744,16 @@ function drawPortrait(cv,who){const p=PORT[who]||PORT.Alma,g=cv.getContext('2d')
 (()=>{const st=document.createElement('style');st.textContent='#card{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,6,8,.72);z-index:60;font-family:system-ui,sans-serif}#card .c{display:flex;gap:0;max-width:min(860px,94vw);background:#12181d;border:2px solid #cfe3f5;box-shadow:0 10px 50px #000}#card canvas{position:static!important;inset:auto!important;width:clamp(130px,28vw,260px)!important;height:auto!important;aspect-ratio:1;flex:none;display:block}#card .t{padding:22px 26px;color:#e8eef2;display:flex;flex-direction:column;gap:10px;min-width:0}#card .k{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#e8c27a}#card .n{font-size:30px;font-weight:700;line-height:1}#card .q{font-size:19px;line-height:1.35;font-style:italic;color:#d9e3ea}#card .r{font-size:15px;color:#aebcc6;display:grid;grid-template-columns:auto 1fr;gap:3px 12px}#card .r b{color:#fff}#card .go{margin-top:6px;font-size:14px;letter-spacing:.12em;color:#0c1014;background:#e8c27a;padding:8px 14px;align-self:flex-start;font-weight:700}#card.done .c{border-color:#7fe08a}#card.done .k{color:#7fe08a}@media(max-width:560px){#card .c{flex-direction:column}#card canvas{width:100%;max-height:36vh}}';document.head.appendChild(st);
  const d=document.createElement('div');d.id='card';d.innerHTML='<div class="c"><canvas width="260" height="260"></canvas><div class="t"></div></div>';document.body.appendChild(d);d.addEventListener('click',()=>cardClose())})();
 function showCard(kind,m,k){const d=m.d,el=document.getElementById('card'),t=el.querySelector('.t');drawPortrait(el.querySelector('canvas'),d.who);el.className=kind==='done'?'done':'';
- if(kind==='new')t.innerHTML='<div class="k">Pedido '+(k+1)+' de '+MISSIONS.length+'</div><div class="n">'+d.who+'</div><div class="q">“'+d.text+'”</div><div class="r"><span>Objetivo</span><b>'+d.item+'</b><span>Buscalo en</span><b>'+mFromName(d)+'</b><span>Entregalo en</span><b>'+mToName(d)+'</b><span>Recompensa</span><b>+30 de vida y munición</b></div><div class="go">ENTER · ACEPTAR</div>';
+ if(kind==='offer'||kind==='cur')t.innerHTML='<div class="k">'+(kind==='offer'?'Pedido nuevo':'Pedido en curso')+' · '+MDONE+' de '+MISSIONS.length+' cumplidos</div><div class="n">'+d.who+'</div><div class="q">“'+d.text+'”</div><div class="r"><span>Objetivo</span><b>'+d.item+'</b><span>Buscalo en</span><b>'+mFromName(d)+'</b><span>Entregalo en</span><b>'+mToName(d)+'</b><span>Recompensa</span><b>+30 de vida y munición</b></div><div class="go">'+(kind==='offer'?'ENTER · ACEPTAR &nbsp;&nbsp; X · RECHAZAR &nbsp;&nbsp; TAB · DESPUÉS':'X · ABANDONAR &nbsp;&nbsp; TAB · CERRAR')+'</div>';
  else t.innerHTML='<div class="k">Misión cumplida · '+MDONE+' de '+MISSIONS.length+'</div><div class="n">'+d.who+'</div><div class="q">“'+(MDONE>=MISSIONS.length?'Eso era todo, Facundo. Ahora sí podemos descansar.':'Gracias, Facundo. Uno menos.')+'”</div><div class="r"><span>Entregaste</span><b>'+d.item+'</b><span>Recompensa</span><b>+30 de vida y munición</b></div><div class="go">ENTER · SEGUIR</div>';
  el.style.display='flex';CARD=kind;for(const kk in keys)keys[kk]=false}
 function cardClose(){if(!CARD)return;document.getElementById('card').style.display='none';CARD=null;if(cityDirT>0)cityDirT=0}
-document.addEventListener('keydown',e=>{if(CARD&&(e.code==='Enter'||e.code==='Space'||e.code==='KeyE'||e.code==='NumpadEnter')){e.preventDefault();e.stopImmediatePropagation();cardClose()}},true);
+document.addEventListener('keydown',e=>{if(!LVL||!LVL.city)return;
+ if(e.code==='Tab'){e.preventDefault();e.stopImmediatePropagation();if(S!=='play')return;if(CARD){cardClose();return}if(MOFF>=0)showCard('offer',MISSIONS[MOFF],MOFF);else if(MI>=0&&!MISSIONS[MI].done)showCard('cur',MISSIONS[MI],MI);else msg('No hay pedidos ahora',2);return}
+ if(!CARD)return;const c=e.code;
+ if(c==='Enter'||c==='NumpadEnter'||c==='KeyE'){e.preventDefault();e.stopImmediatePropagation();if(CARD==='offer')missionAccept();cardClose()}
+ else if(c==='KeyX'){e.preventDefault();e.stopImmediatePropagation();if(CARD==='offer')missionReject();else if(CARD==='cur')missionAbandon();cardClose()}
+ else if(c==='Space'||c==='Escape'){e.preventDefault();e.stopImmediatePropagation();cardClose()}},true);
 
 // ====================================================== CAPÍTULO 1 · parte 2: calle Buenos Aires → Joaquín V. González → plaza San Martín (nivel propio, cajas)
 // Coordenadas del nivel (m): x 0..56 (oeste→este), z 0..172 (sur→norte). Arranque frente al hospital (z 10, mirando al norte).
@@ -2266,9 +2280,13 @@ function wFire(){const n=wCur(),d=WDAT[n],s=WS[n];if(WCD>0||WRL>0||P.hp<=0||P.sp
   if(hit){P.shake=Math.max(P.shake,.2+Math.min(nh,4)*.1);P.kick=Math.max(P.kick,.5)}noise(P.x,P.z,8)}
  else if(d.k==='throw'){if(s.res<=0){AU.click();WCD=.4;return}s.res--;WCD=d.rate;WANIM='use';WAT=0;const f=fwd();
   THROWS.push({kind:n,x:P.x+f[0]*.5,y:eyeY()-.1,z:P.z+f[2]*.5,vx:f[0]*11+P.pvx,vy:f[1]*11+3.5,vz:f[2]*11+P.pvz,t:0,spin:R()*6});AU.noise(.12,'bandpass',600,1800,.25,0,.1)}}
-function throwsUpdate(dt){for(let i=THROWS.length-1;i>=0;i--){const q=THROWS[i];q.t+=dt;q.vy-=9.8*dt;const nx=q.x+q.vx*dt,ny=q.y+q.vy*dt,nz=q.z+q.vz*dt;
+function throwsUpdate(dt){if(P.poison>0&&P.hp>0){P.poison-=dt;P.hp-=3.2*dt;P.regen=Math.max(P.regen||0,2);if(P.hp<=0)hurtP(1,P.x,P.z)}{const pv=document.getElementById('pois');if(pv)pv.style.opacity=P.poison>0?Math.min(.75,P.poison*.22+.15*Math.sin(time*6)+.15):0}
+ for(let i=THROWS.length-1;i>=0;i--){const q=THROWS[i];q.t+=dt;q.vy-=(q.kind==='Veneno'?4:9.8)*dt;const nx=q.x+q.vx*dt,ny=q.y+q.vy*dt,nz=q.z+q.vz*dt;
+  if((q.kind==='Veneno'||q.kind==='Acido')&&Math.hypot(q.x-P.x,q.z-P.z)>1.8){for(let k=0;k<2;k++)parts.push({x:q.x+(R()-.5)*.12,y:q.y+(R()-.5)*.12,z:q.z+(R()-.5)*.12,vx:-q.vx*.05,vy:-.2,vz:-q.vz*.05,life:.35,sz:q.kind==='Veneno'?.045:.04,c:[.35,1,.15],e:2.2,g:.2})}
+  if(q.kind==='Veneno'&&P.hp>0&&Math.hypot(nx-P.x,nz-P.z)<.55&&ny>P.y&&ny<P.y+1.95){THROWS.splice(i,1);hurtP(9,q.x,q.z);P.poison=4.5;msg('¡Veneno! Te está quemando',2);continue}
   const wall=solidAt(CXo(nx),CXo(nz))||ny>WH-.05;if(wall||ny<=.08||q.t>6){const x=wall?q.x:nx,z=wall?q.z:nz;THROWS.splice(i,1);
    if(q.kind==='Molotov'){FIRES.push({x,z,t:8,r:2.3});AU.noise(.5,'lowpass',1800,300,.8,0,.4);AU.tone(90,40,.3,'sine',.5,0,.2);for(let k=0;k<40;k++)parts.push({x,y:.1,z,vx:(R()-.5)*7,vy:1+R()*4,vz:(R()-.5)*7,life:.5+R()*.8,sz:.05+R()*.06,c:[1,.5+R()*.3,.1],e:3,g:.4});noise(x,z,22)}
+   else if(q.kind==='Veneno'){FIRES.push({x,z,t:3.5,r:1.0,acid:1});for(let k=0;k<16;k++)parts.push({x,y:.15,z,vx:(R()-.5)*4,vy:1+R()*2,vz:(R()-.5)*4,life:.5,sz:.04,c:[.4,.95,.2],e:1.5,g:.6})}
    else if(q.kind==='Acido'){FIRES.push({x,z,t:6,r:1.8,acid:1});AU.noise(.4,'bandpass',400,1200,.5,0,.3);for(let k=0;k<24;k++)parts.push({x,y:.1,z,vx:(R()-.5)*5,vy:1+R()*3,vz:(R()-.5)*5,life:.5+R()*.6,sz:.04,c:[.4,.9,.2],e:1.5,g:.6})}
    else{FLARES.push({x,z,t:28});AU.noise(.3,'highpass',2000,6000,.5,0,.2);for(const zz of zs)if(zz.state==='idle'&&Math.hypot(zz.x-x,zz.z-z)<26)wake(zz,false)}
    continue}
@@ -2336,6 +2354,7 @@ function spAttackFx(z){}
 // devuelve true si ya resolvió el movimiento del infectado este frame
 function spUpdate(z,dt){const n=z.sp;const dx=P.x-z.x,dz=P.z-z.z,d=Math.hypot(dx,dz);z.cd-=dt;
  if(n==='Polilla'){{const ch=z.state==='chase';let tg=1.3+Math.sin(time*2+z.id)*.15;if(ch){if(d>7)tg=2.0+Math.sin(time*2.6+z.id)*.4;else if(z.atkCd>.25)tg=2.2;else tg=Math.max(.9,.9+(d-2)*.22)}z.fy=(z.fy===undefined?1.6:z.fy)+(tg-(z.fy===undefined?1.6:z.fy))*Math.min(1,dt*3.5)}
+ if(z.state==='chase'&&z.stag<=0&&z.cd<=0&&d>3.5&&d<17&&losClear(z.x,z.z,P.x,P.z)){z.cd=2.4+R()*1.6;const y0=(z.fy||1.6)+.9,T=d/15,ty=P.y+1.25,vy=(ty-y0)/T+2*T;THROWS.push({kind:'Veneno',x:z.x+dx/d*.4,y:y0,z:z.z+dz/d*.4,vx:dx/d*15+(P.pvx||0)*.3,vy,vz:dz/d*15+(P.pvz||0)*.3,t:0});AU.noise(.25,'bandpass',600,1500,.6*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.2)}
  if(z.state==='chase'&&z.stag<=0){const s=Math.sin(time*9+z.id)*3.2*dt;collide(z.x+Math.cos(z.yaw)*s,z.z-Math.sin(z.yaw)*s,.1);z.x=CR.x;z.z=CR.z;if(R()<.25)parts.push({x:z.x+(R()-.5)*.4,y:1.2+R()*.6,z:z.z+(R()-.5)*.4,vx:(R()-.5),vy:.3,vz:(R()-.5),life:.4,sz:.02,c:[.8,.75,.6],e:.3,g:0})}return false}
  if(n==='Acequiero'){if(z.state==='chase'&&z.cd<=0&&d>5&&d<15&&losClear(z.x,z.z,P.x,P.z)){z.cd=4.5;z.atk=.6;const f=[dx/d,dz/d];
    const T=d/11,vy=(4.9*T*T-1.4)/T;THROWS.push({kind:'Acido',x:z.x+f[0]*.5,y:1.5,z:z.z+f[1]*.5,vx:f[0]*11,vy,vz:f[1]*11,t:0});AU.noise(.5,'bandpass',300,900,.5*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.3)}return false}
