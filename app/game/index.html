@@ -828,7 +828,7 @@ function buildCalle(){const B=[],F=[],L=[],PK=[];let rs=7;const r=()=>{rs=(rs*16
 const MV=MEVDATA;
 const MQ=(()=>{const bin=atob(MV.q);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return new Float32Array(u8.buffer)})();
 const RI={};MV.regs.forEach((r,i)=>RI[r]=i);
-let CS=.25;const DIL=.24;let W=292,H=108,WH=2.8,OX=7,OZ=8,LY=0;
+let RIX=null;let CS=.25;const DIL=.24;let W=292,H=108,WH=2.8,OX=7,OZ=8,LY=0;
 let GH=new Float32Array(1),G=new Uint8Array(1),REG=[],ROOMS=[],DOORS=[],doorAt=new Int16Array(1),PROPS=[],LAMPS=[],PICKS=[],ZSPAWN=[],START={x:10,z:7,yaw:0},SAFE=()=>false,LVL=null,LVLN=0;
 let gate={open:0,tgt:0,cells:[],door:null};
 const PANEL={x:-100,z:-100};
@@ -880,10 +880,18 @@ function loadLevel(k){LVLN=k;const L=LVLDEF[k];LY=L.Y;OX=L.ox;OZ=L.oz;CS=L.cs||.
  G=new Uint8Array(W*H).fill(1);GH=new Float32Array(W*H).fill(99);doorAt=new Int16Array(W*H).fill(-1);REG=[];ROOMS=[];PROPS=[];DOORS=[];LAMPS=[];PICKS=[];ZSPAWN=[];gate={open:0,tgt:0,cells:[],door:null};CUST=null;
  if(L.custom){CUST=L.custom();WH=30;const cx0=x=>Math.floor(x/CS),cz0=z=>Math.floor(z/CS);
   for(const f of CUST.floors){const x0=cx0(f.x0),x1=cx0(f.x1-1e-4),z0=cz0(f.z0),z1=cz0(f.z1-1e-4);for(let y=z0;y<=z1;y++)for(let x=x0;x<=x1;x++){if(x<0||y<0||x>=W||y>=H)continue;G[I(x,y)]=0;GH[I(x,y)]=0}}
-  for(const c of CUST.boxes){if(!c.solid||!(c.y1>.4&&c.y0<1.7))continue;const bh=(c.y0<.35&&!(c.y0>.3&&c.y0<.34))?c.y1:99;const x0=cx0(c.x0-DIL),x1=cx0(c.x1+DIL),z0=cz0(c.z0-DIL),z1=cz0(c.z1+DIL);
+  for(const c of CUST.boxes){if(!c.solid||!(c.y1>.4&&c.y0<1.7))continue;const bh=(c.y0>.3&&c.y0<.34)?(c.y1<1?1.0:99):(c.y0<.35?c.y1:99);const x0=cx0(c.x0-DIL),x1=cx0(c.x1+DIL),z0=cz0(c.z0-DIL),z1=cz0(c.z1+DIL);
    const ex=[],ez=[];for(let x=x0;x<=x1;x++){const mx=(x+.5)*CS;if(mx>c.x0-DIL&&mx<c.x1+DIL)ex.push(x)}for(let y=z0;y<=z1;y++){const mz=(y+.5)*CS;if(mz>c.z0-DIL&&mz<c.z1+DIL)ez.push(y)}
    if(!ex.length)ex.push(cx0((c.x0+c.x1)/2));if(!ez.length)ez.push(cz0((c.z0+c.z1)/2));
    for(const y of ez)for(const x of ex){if(x<0||y<0||x>=W||y>=H)continue;G[I(x,y)]=1;GH[I(x,y)]=Math.max(GH[I(x,y)],bh)}}
+  for(const c of CUST.boxes){if(c.solid||c.y0<1.2||c.y1<1.3||c.y1>1.6||c.x1-c.x0>2.4||c.z1-c.z0>2.4)continue;for(let y=cz0(c.z0+.1);y<=cz0(c.z1-.1);y++)for(let x=cx0(c.x0+.1);x<=cx0(c.x1-.1);x++){if(x<0||y<0||x>=W||y>=H)continue;const i=I(x,y);if(G[i]===1&&GH[i]===1.0)GH[i]=c.y1}}
+  {const bs=[];for(const c of CUST.boxes){const m=typeof c.m==='string'?c.m:'';if(m==='win'||m==='glass'||m.indexOf('st:@t')===0||m.indexOf('st:@gf')===0)continue;if(c.y1-c.y0<.04||Math.min(c.x1-c.x0,c.z1-c.z0)<.025)continue;bs.push(c)}
+   for(const l of CUST.lamps)if(l.t===6)bs.push({x0:l.x-.08,x1:l.x+.08,z0:l.z-.08,z1:l.z+.08,y0:0,y1:4.4});
+   const RC=4,RW=Math.ceil(W*CS/RC)+1,RH=Math.ceil(H*CS/RC)+1,n=bs.length,bx=new Float32Array(n*6),cnt=new Int32Array(RW*RH+1);
+   const rg=(c,f)=>{const a0=Math.max(0,Math.floor(c.x0/RC)),a1=Math.min(RW-1,Math.floor(c.x1/RC)),b0=Math.max(0,Math.floor(c.z0/RC)),b1=Math.min(RH-1,Math.floor(c.z1/RC));for(let b=b0;b<=b1;b++)for(let a=a0;a<=a1;a++)f(b*RW+a)};
+   bs.forEach((c,k)=>{bx.set([c.x0,c.y0,c.z0,c.x1,c.y1,c.z1],k*6);rg(c,i=>cnt[i+1]++)});for(let i=0;i<RW*RH;i++)cnt[i+1]+=cnt[i];
+   const fill=cnt.slice(),it=new Int32Array(cnt[RW*RH]);bs.forEach((c,k)=>rg(c,i=>{it[fill[i]++]=k}));
+   RIX={RC,RW,RH,off:cnt,it,bx,st:new Int32Array(n),ray:0}}
   for(const l of CUST.lamps){if(l.t!==6)continue;const x=cx0(l.x),y=cz0(l.z);if(x<0||y<0||x>=W||y>=H)continue;G[I(x,y)]=1;GH[I(x,y)]=99}
   {let gd=0;for(const d of (CUST.doors||[])){gd++;let first=true;const x0=cx0(d.col[0]),x1=cx0(d.col[1]-1e-4),z0=cz0(d.col[2]),z1=cz0(d.col[3]-1e-4);
    for(let y=z0;y<=z1;y++)for(let x=x0;x<=x1;x++){if(x<0||y<0||x>=W||y>=H||G[I(x,y)]!==0)continue;G[I(x,y)]=3;doorAt[I(x,y)]=DOORS.length;DOORS.push({cx:x,cy:y,axisX:false,open:0,tgt:0,grp:1000+gd,hingeLow:true,mev:d,draw:first});first=false}}}
@@ -983,9 +991,25 @@ function drawMevDoors(){for(const d of DOORS){if(!d.draw)continue;const m=d.mev,
 const LEVELS=LVLDEF;
 
 let CPL=0;
-function solidP(cx,cy){if(cx<0||cy<0||cx>=W||cy>=H)return true;const i=I(cx,cy);if(G[i]===1&&GH[i]<=.75&&P.y>=GH[i]-.06)return false;return solidAt(cx,cy)}
+function solidP(cx,cy){if(cx<0||cy<0||cx>=W||cy>=H)return true;const i=I(cx,cy);if(G[i]===1&&GH[i]<=1.6&&P.y>=GH[i]-.06)return false;return solidAt(cx,cy)}
 function collideP(px,pz,r){CPL=1;const q=collide(px,pz,r);CPL=0;return q}
-function groundH(){const cx=CXo(P.x),cy=CXo(P.z);if(cx<0||cy<0||cx>=W||cy>=H)return 0;const i=I(cx,cy);return(G[i]===1&&GH[i]<=.75&&P.y>=GH[i]-.06)?GH[i]:0}
+function groundH(){const cx=CXo(P.x),cy=CXo(P.z);if(cx<0||cy<0||cx>=W||cy>=H)return 0;const i=I(cx,cy);return(G[i]===1&&GH[i]<=1.6&&P.y>=GH[i]-.06)?GH[i]:0}
+
+function rayWorld(ox,oy,oz,dx,dy,dz,maxT){const R=RIX;let best=maxT,ax=-1,sg=0,type='none';R.ray++;const ray=R.ray,B=R.bx,RC=R.RC;
+ if(dy<-1e-6){const tg=-oy/dy;if(tg>0&&tg<best){best=tg;ax=1;sg=1;type='floor'}}
+ let cx=Math.floor(ox/RC),cz=Math.floor(oz/RC);const sx=dx>0?1:-1,sz=dz>0?1:-1,idx=Math.abs(dx)>1e-9?1/dx:1e9,idz=Math.abs(dz)>1e-9?1/dz:1e9;
+ const tdx=Math.abs(RC*idx),tdz=Math.abs(RC*idz);let tmx=Math.abs(dx)>1e-9?((dx>0?(cx+1)*RC:cx*RC)-ox)*idx:1e9,tmz=Math.abs(dz)>1e-9?((dz>0?(cz+1)*RC:cz*RC)-oz)*idz:1e9;
+ const O=[ox,oy,oz],D=[dx,dy,dz];
+ for(let guard=0;guard<400;guard++){
+  if(cx>=0&&cz>=0&&cx<R.RW&&cz<R.RH){const ci=cz*R.RW+cx;for(let j=R.off[ci];j<R.off[ci+1];j++){const b=R.it[j];if(R.st[b]===ray)continue;R.st[b]=ray;const o=b*6;
+    let t0=-1e9,t1=best,a0=-1,s0=0,ok=true;
+    for(let a=0;a<3;a++){const mn=B[o+a],mx=B[o+3+a],p=O[a],d=D[a];if(Math.abs(d)<1e-9){if(p<mn||p>mx){ok=false;break}continue}
+     let u=(mn-p)/d,v=(mx-p)/d;if(u>v){const w=u;u=v;v=w}if(u>t0){t0=u;a0=a;s0=d>0?-1:1}if(v<t1)t1=v;if(t0>t1){ok=false;break}}
+    if(ok&&t0>.02&&t0<best){best=t0;ax=a0;sg=s0;type='wall'}}}
+  const tn=Math.min(tmx,tmz);if(tn>=best)break;if(tmx<tmz){cx+=sx;tmx+=tdx}else{cz+=sz;tmz+=tdz}}
+ // puertas cerradas (grilla)
+ for(let t=.05;t<best;t+=.1){const px=ox+dx*t,pz=oz+dz*t,py=oy+dy*t;if(py>2.3)continue;const c1=CXo(px),c2=CXo(pz);if(c1<0||c2<0||c1>=W||c2>=H)break;const v=G[I(c1,c2)];if((v===3||v===4)&&solidAt(c1,c2)){best=t;type='wall';ax=Math.abs(dx)>Math.abs(dz)?0:2;sg=ax===0?-Math.sign(dx):-Math.sign(dz);break}}
+ return{t:best,type,nx:ax===0?sg:0,ny:ax===1?sg:0,nz:ax===2?sg:0}}
 
 const GEN=(()=>{'use strict';
 /* ===== Zona Muerta · Visor de personajes (prototipo) =====
@@ -2066,7 +2090,7 @@ function hurtZ(z,dmg,head,dx,dz,px,py,pz){if(z.state==='dead')return;z.hp-=dmg;z
 // ---- trazado de rayo
 function castRay(ox,oy,oz,dx,dy,dz,maxT){
  let t=0,px=ox,py=oy,pz=oz,wallT=maxT,nx=0,ny=0,nz=0,type='none';const st=.05;
- let lcx=CXo(ox),lcy=CXo(oz);
+ let lcx=CXo(ox),lcy=CXo(oz);if(RIX&&CUST){const w=rayWorld(ox,oy,oz,dx,dy,dz,maxT);wallT=w.t;type=w.type;nx=w.nx;ny=w.ny;nz=w.nz;t=maxT}
  while(t<maxT){t+=st;px=ox+dx*t;py=oy+dy*t;pz=oz+dz*t;
   if(py<0){wallT=t;ny=1;type='floor';break}if(py>WH){wallT=t;ny=-1;type='wall';break}
   const cx=CXo(px),cy=CXo(pz);
@@ -2160,11 +2184,11 @@ function update(dt){
   let mx=0,mz=0;const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw),rx=-Math.cos(P.yaw),rz=Math.sin(P.yaw);
   if(keys.KeyW){mx+=fx;mz+=fz}if(keys.KeyS){mx-=fx;mz-=fz}if(keys.KeyD){mx+=rx;mz+=rz}if(keys.KeyA){mx-=rx;mz-=rz}
   const ml=Math.hypot(mx,mz);if(P.st===undefined){P.st=1;P.tired=0;P.sk=0}const want=(keys.ShiftLeft||keys.ShiftRight)&&ml>0&&!P.tired;const run=want&&P.st>0;if(run){P.st=Math.max(0,P.st-dt/4.5);if(P.st<=0)P.tired=1}else{P.st=Math.min(1,P.st+dt*(ml>0?.16:.3));if(P.tired&&P.st>.35)P.tired=0}P.sprint=run;P.sk=lerp(P.sk,run?1:0,Math.min(1,dt*9));if(LVL.city)staminaUi();const sp=run?9.4:(P.tired?3.6:5.6);
-  if(ml>0){mx/=ml;mz/=ml;if(P.gnd!==false&&!P.scope){const pd=.5+sp*.15,pc=CXo(P.x+mx*pd),pr=CXo(P.z+mz*pd);if(pc>=0&&pr>=0&&pc<W&&pr<H){const pi=I(pc,pr),hh=GH[pi];if(G[pi]===1&&hh<=.75&&hh>P.y+.04){P.vy=Math.min(4.7,Math.sqrt(2*11*(hh-P.y+.2)));P.gnd=false}}}}P.moving=lerp(P.moving,ml>0?1:0,Math.min(1,dt*10));
+  if(ml>0){mx/=ml;mz/=ml;if(P.gnd!==false&&!P.scope){const pd=.5+sp*.15,pc=CXo(P.x+mx*pd),pr=CXo(P.z+mz*pd);if(pc>=0&&pr>=0&&pc<W&&pr<H){const pi=I(pc,pr),hh=GH[pi];if(G[pi]===1&&hh<=1.6&&hh-P.y<=.75&&hh>P.y+.04){P.vy=Math.min(4.7,Math.sqrt(2*11*(hh-P.y+.2)));P.gnd=false}}}}P.moving=lerp(P.moving,ml>0?1:0,Math.min(1,dt*10));
   const vx=mx*sp+P.pvx,vz=mz*sp+P.pvz;P.pvx*=Math.pow(.003,dt);P.pvz*=Math.pow(.003,dt);
   collideP(P.x+vx*dt,P.z+vz*dt,.27);P.x=CR.x;P.z=CR.z;
   if(ml>0&&P.gnd!==false){P.bob+=dt*(run?11:8.5);stepT-=dt;if(stepT<=0){stepT=run?.3:.42;AU.step()}}
-  if(keys.Space&&P.gnd!==false){P.vy=4.5}P.vy-=11*dt;const gh=groundH();P.y=Math.max(gh,P.y+P.vy*dt);P.gnd=P.y<=gh+.001;if(P.gnd&&P.vy<0)P.vy=0;
+  if(keys.Space&&P.gnd!==false&&ml>0){const pc=CXo(P.x+mx*.6),pr=CXo(P.z+mz*.6);if(pc>=0&&pr>=0&&pc<W&&pr<H){const pi=I(pc,pr),hh=GH[pi];if(G[pi]===1&&hh>.75&&hh<=1.6&&hh>P.y+.04){P.vy=Math.sqrt(2*11*(hh-P.y+.3));P.gnd=false}}}if(keys.Space&&P.gnd!==false){P.vy=4.5}P.vy-=11*dt;const gh=groundH();P.y=Math.max(gh,P.y+P.vy*dt);P.gnd=P.y<=gh+.001;if(P.gnd&&P.vy<0)P.vy=0;
   // disparo
   P.fireT-=dt;P.shoveT-=dt;P.heat=Math.max(0,P.heat-dt*.8);P.kick=Math.max(0,P.kick-dt*9);P.mf=Math.max(0,P.mf-dt);P.shoveA=Math.max(0,P.shoveA-dt);
   if(false){P.rph=P.reload/2.0;const pr=P.rph;P.reload+=dt;const pn=P.reload/2.0;
@@ -2517,7 +2541,7 @@ window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mdown=fals
 
 loadMevTextures();newGame();
 // ganchos para pruebas
-window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},keys,cardClose,cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
+window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},keys,cardClose,castRay,get LAMPS(){return LAMPS},cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
 requestAnimationFrame(frame);
 </script>
 <script src="data/mevdata.js"></script>
