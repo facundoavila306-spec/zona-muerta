@@ -1867,6 +1867,34 @@ function armedPose(c,anim,t){
     w.update();wpose(w,wa,t)}
 }
 
+// ---- v24.6: zombis comunes nuevos (policía, militar, bombero, adolescentes)
+function Policia(rs){const R=rnd(900+rs*7);const ch=human('Policia',{h:.97,w:1.05,hw:1.0,armR:1.02,legR:1.0,skin:'#a7a48a',vein:.55,blood:.35+R()*.4,dirt:.2,seed:121+rs,
+  hair:{style:'short',c:'#241a12'},hat:{type:'cap',c:'#1b2333',dirt:.3},face:Object.assign({},INF_FACE),
+  shirt:{c:T('#3a4d70',R,.12),sleeve:rs?'long':'short',pocket:true,collar:true,tear:.3,dirt:.3,blood:.45},pants:{type:'long',c:'#1f2738',tear:.25,dirt:.3,blood:.3},shoes:{c:'#141414',boot:true,dirt:.3}});
+  ch.part('chest',ell(.018,.022,.006),{c:C('#d9b44a'),tex:0,rough:.3,spec:.8},at(.06,.14,.124));
+  ch.part('spine',sbox(.035,.05,.03,.3),{c:C('#151515'),tex:0,rough:.5},at(.15,-.07,.02));
+  return setZ(ch,{lean:.15,limp:.15,speed:.95,amp:.95,armF:-1.2,headTilt:.8},{nombre:'Infectado · policía',rol:'Común',desc:'Uniforme azul, gorra y cinturón con la funda vacía. Cayó en el primer cordón.'})}
+function Militar(rs){const R=rnd(910+rs*7);const ch=human('Militar',{h:1.0,w:1.1,hw:1.02,armR:1.08,legR:1.06,skin:'#a09d82',vein:.5,blood:.3+R()*.4,dirt:.35,seed:131+rs,
+  hair:null,hat:{type:'helmet',c:'#4b5638',dirt:.5},face:Object.assign({},INF_FACE),
+  shirt:{c:T('#5a6346',R,.15),sleeve:'long',pocket:true,collar:true,tear:.3,dirt:.5,blood:.4},pants:{type:'long',c:T('#4d553b',R,.15),tear:.25,dirt:.5,blood:.3,cuff:'#3a2e22'},shoes:{c:'#2e241a',boot:true,dirt:.5}});
+  ch.part('chest',sbox(.13,.15,.06,.3),{c:C('#465036'),tex:0,rough:.7,dirt:.4},at(0,.06,-.17));
+  for(const s of[1,-1])ch.part('chest',sbox(.035,.03,.02,.3),{c:C('#3d4630'),tex:0,rough:.7},at(s*.07,.02,.125));
+  return setZ(ch,{lean:.18,limp:.1,speed:1.05,amp:1.0,armF:-1.0,headTilt:.6},{nombre:'Infectado · soldado',rol:'Común',desc:'Casco, uniforme verde y mochila: era del puesto de control. Fuerte y rápido.'})}
+function Bombero(rs){const R=rnd(920+rs*7);const ch=human('Bombero',{h:.99,w:1.15,hw:1.06,armR:1.1,legR:1.08,skin:'#a39b84',vein:.5,blood:.25+R()*.3,dirt:.45,seed:141+rs,
+  hair:null,hat:{type:'helmet',c:rs?'#d4a11e':'#b8281e',dirt:.5},face:Object.assign({},INF_FACE),
+  shirt:{c:'#3b3a33',sleeve:'long',collar:true,tear:.2,dirt:.6,blood:.3,g:.02,vest:{c:'#3b3a33',dirt:.6,blood:.3}},pants:{type:'long',c:'#3b3a33',tear:.15,dirt:.6,blood:.2,cuff:'#d8e0c0',g:.02},shoes:{c:'#151515',boot:true,dirt:.6}});
+  return setZ(ch,{lean:.25,limp:.2,speed:.8,amp:.9,armF:-1.0,headTilt:.7},{nombre:'Infectado · bombero',rol:'Común',desc:'Traje de bombero con bandas reflectivas y casco. Pesado, aguanta más balas.'})}
+function Pibe(rs){const R=rnd(930+rs*7);const ch=human('Pibe',{h:.87,w:.86,hw:.9,armR:.88,legR:.9,skin:'#b3a88f',vein:.5,blood:.3+R()*.4,dirt:.15,seed:151+rs,
+  hair:{style:'messy',c:rs?'#2a1d12':'#5a3a20',dirt:.3},face:Object.assign({},INF_FACE),
+  shirt:{c:T(rs?'#3c6f9e':'#2f2f33',R,.25),sleeve:'long',tear:.4,dirt:.25,blood:.45,hem:'flare',len:.1,flare:.6},pants:{type:'long',c:'#34466b',tear:.4,dirt:.3,blood:.3},shoes:{c:'#e8e6e0',boot:false,dirt:.4}});
+  ch.part('chest',sbox(.12,.14,.05,.3),{c:C(rs?'#9e2b2b':'#2b5e9e'),tex:0,rough:.6},at(0,.05,-.16));
+  return setZ(ch,{lean:.3,limp:.05,speed:1.25,amp:1.15,armF:-1.3,headTilt:1.1},{nombre:'Infectado · pibe',rol:'Común',desc:'Buzo, jean y mochila del colegio. Liviano y muy rápido.'})}
+function Piba(rs){const R=rnd(940+rs*7);const ch=human('Piba',{h:.84,fem:true,w:.84,hw:1.0,bust:.6,armR:.85,legR:.9,arm:.95,skin:'#b8ab92',vein:.5,blood:.3+R()*.4,dirt:.12,seed:161+rs,
+  hair:{style:rs?'tail':'long',c:rs?'#1d1410':'#7a4a28',dirt:.3,blood:.2},face:Object.assign({},INF_FACE,{lip:'#6a3a3a'}),
+  shirt:{c:T(rs?'#c45a8a':'#e8e4dc',R,.2),sleeve:'short',tear:.4,dirt:.25,blood:.5,bust:true},pants:{type:rs?'short':'long',c:rs?'#2f3b5a':'#3a3a40',tear:.35,dirt:.3,blood:.3,t:.55},shoes:{c:'#f0eee8',boot:false,dirt:.4}});
+  return setZ(ch,{lean:.28,limp:.05,speed:1.2,amp:1.1,armF:-1.25,headTilt:1.2},{nombre:'Infectada · piba',rol:'Común',desc:'Ropa de colegio o de salida. Liviana y rápida.'})}
+Object.assign(DEFS,{Policia,Militar,Bombero,Pibe,Piba});
+
 
 return {mk,pose,DEFS,GROUPS,WDEFS,QS,armedChar,armedPose,wpose,setQ:q=>{Q=q},mI,mM,mT,mRY,mRX,mRZ,mS,mE};})();
 // ====================================================== PERSONAJES: generador propio (p1-p5) renderizado con un shader "con huesos"
@@ -1946,7 +1974,7 @@ function drawChars(shadow,vmPass){if(!CHARQ.length)return;
   gl.bindVertexArray(tpl.vao);gl.drawArrays(gl.TRIANGLES,0,tpl.n)}
  gl.bindVertexArray(null)}
 // pose de infectado (adaptado de la versión MEV)
-const ZNAMES=['Paciente','Enfermero','Vecino','Obrero','Mujer'];
+const ZNAMES=['Vecino','Mujer','Obrero','Policia','Militar','Bombero','Pibe','Piba','Vecino','Mujer','Paciente','Policia','Pibe'];
 function zChar(z){if(z.ch)return z.ch;const name=z.sp||ZNAMES[(z.id*7)%ZNAMES.length],rs=z.sp?0:(z.id%2);const tpl=charTpl(name,rs);
  const ch=skel(tpl);ch.at=R()*5;ch.fl=R()*6;z.ch=ch;z.sc=tpl.scale*(z.tank?1.0:.98+R()*.06);return ch}
 function poseZ(z,dt){const ch=zChar(z),J=ch.J,k=z.sc;const dead=z.state==='dead',chase=z.state==='chase',stag=z.stag>0;
@@ -2358,7 +2386,8 @@ function spUpdate(z,dt){const n=z.sp;const dx=P.x-z.x,dz=P.z-z.z,d=Math.hypot(dx
  if(z.state==='chase'&&z.stag<=0){const s=Math.sin(time*9+z.id)*3.2*dt;collide(z.x+Math.cos(z.yaw)*s,z.z-Math.sin(z.yaw)*s,.1);z.x=CR.x;z.z=CR.z;if(R()<.25)parts.push({x:z.x+(R()-.5)*.4,y:1.2+R()*.6,z:z.z+(R()-.5)*.4,vx:(R()-.5),vy:.3,vz:(R()-.5),life:.4,sz:.02,c:[.8,.75,.6],e:.3,g:0})}return false}
  if(n==='Acequiero'){if(z.state==='chase'&&z.cd<=0&&d>5&&d<15&&losClear(z.x,z.z,P.x,P.z)){z.cd=4.5;z.atk=.6;const f=[dx/d,dz/d];
    const T=d/11,vy=(4.9*T*T-1.4)/T;THROWS.push({kind:'Acido',x:z.x+f[0]*.5,y:1.5,z:z.z+f[1]*.5,vx:f[0]*11,vy,vz:f[1]*11,t:0});AU.noise(.5,'bandpass',300,900,.5*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.3)}return false}
- if(n==='Imitador'){if(z.state==='idle'){if(d<3.6||z.hit>0){z.state='chase';AU.groan(z.x,z.z,true);P.shake=Math.max(P.shake,.5);msg('¡No era una persona!',2)}
+ if(n==='Imitador'){if(z.state==='idle'&&d>6&&d<32&&z.cd<=0&&losClear(z.x,z.z,P.x,P.z)){z.cd=9+R()*6;msg(R()<.5?'Alguien grita: «¡Ayuda! ¡Por acá!»':'Una voz: «¡No me dejen solo, por favor!»',3);AU.groan&&0}
+ if(z.state==='idle'){if(d<3.6||z.hit>0){z.state='chase';AU.groan(z.x,z.z,true);P.shake=Math.max(P.shake,.5);msg('¡No era una persona!',2)}
    else{z.yaw+=((Math.atan2(dx,dz)-z.yaw+9.4247)%6.2832-3.1416)*Math.min(1,dt*1.5);z.t+=dt*.5;z.spdNow=0}return true}return false}
  if(n==='Topo'){const T=z.topo;T.t-=dt;
   if(T.ph==='under'){z.hidden=true;z.spdNow=0;if(T.t<=0){for(let k=0;k<30;k++){const a=R()*6.28,rr=3.5+R()*3.5,x=P.x+Math.cos(a)*rr,zz=P.z+Math.sin(a)*rr;if(!solidAt(CXo(x),CXo(zz))&&losClear(x,zz,P.x,P.z)){z.x=x;z.z=zz;break}}
