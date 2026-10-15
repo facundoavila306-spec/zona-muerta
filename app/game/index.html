@@ -539,14 +539,15 @@ CITY.avE=[[5,-860],[5,-348],[7,-232],[11,127],[13,247],[16,485],[18,817],[19,107
 function interpLine(a,z){if(z<=a[0][1])return a[0][0];for(let i=0;i<a.length-1;i++){if(z<=a[i+1][1]){const t=(z-a[i][1])/((a[i+1][1]-a[i][1])||1);return a[i][0]+(a[i+1][0]-a[i][0])*t}}return a[a.length-1][0]}
 function cityLot(){return null}
 // Mapa congelado: la ciudad ya está generada (mapa-congelado.json). El generador original quedó en ciudad_gen.js.
-function buildCiudad(){const M=MAPA;CITY.lm=M.lm;CITY.spots=M.spots;CITY.corpses=M.corpses||[];CITY.fires=M.fires||[];CITY.wells=M.wells||[];CITY.refuge=M.refuge||null;CITY.shops=M.shops.map(q=>({x:q[0],z:q[1]}));
+function buildCiudad(){const M=MAPA;CITY.lm=M.lm;CITY.spots=M.spots;CITY.corpses=M.corpses||[];CITY.fires=M.fires||[];CITY.wells=M.wells||[];CITY.refuges=M.refuges||(M.refuge?[M.refuge]:[]);CITY.refuge=CITY.refuges[0]||null;CITY.shops=M.shops.map(q=>({x:q[0],z:q[1]}));
  return{boxes:M.boxes.map(c=>({x0:c[0],y0:c[1],z0:c[2],x1:c[3],y1:c[4],z1:c[5],m:M.mats[c[6]],solid:!!c[7]})),floors:M.floors.map(f=>({x0:f[0],z0:f[1],x1:f[2],z1:f[3],m:f[4],y:f[5]})),lamps:M.lamps.map(l=>({x:l[0],z:l[1],t:l[2],c:l[3],I:l[4],R:l[5],y:l[6]})),picks:M.picks.map(q=>({t:q[0],x:q[1],z:q[2]})),signs:M.signs,doors:M.doors||[]}}
 // autos por la calle (fuera de las manzanas), después de generar
 function cityCars(){}
 // ---------- carteles de esquina (texturas generadas con el nombre de la calle)
-const SHOPN=['ALMACÉN','KIOSCO','FARMACIA','FERRETERÍA','PANADERÍA','CARNICERÍA','PELUQUERÍA','BAR','ROPA','LIBRERÍA'],SHOPK=['almacen','kiosco','farmacia','ferreteria','panaderia','carniceria','peluqueria','bar','ropa','libreria'];const TEXAT=['@t0','@t1','@t2','@mu','@mn','@mcA','@mcB','@hp','@cf','@em','@bw0','@bw1','@bw2','@bd','@bdr','@sot','@bl0','@bl1','@bl2','@bl3','@gr0','@gr1','@wx','@bh','@ck0','@ck1','@gf0','@gf1','@gf2','@gf3','@cp'].concat(SHOPN.map((n,i)=>'@s'+i));const STREET_TEX=[];function streetSignTex(name){const k=STREET_TEX.findIndex(s=>s.n===name);if(k>=0)return STREET_TEX[k];if(name[0]==='@'&&name[1]!=='t'){const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return[c,c.getContext('2d')]};let c,g;const COL=['#1d5fb0','#f08a3a','#54b24a','#e0457b','#7a4fb0'];
+const SHOPN=['ALMACÉN','KIOSCO','FARMACIA','FERRETERÍA','PANADERÍA','CARNICERÍA','PELUQUERÍA','BAR','ROPA','LIBRERÍA'],SHOPK=['almacen','kiosco','farmacia','ferreteria','panaderia','carniceria','peluqueria','bar','ropa','libreria'];const TEXAT=['@t0','@t1','@t2','@mu','@mn','@mcA','@mcB','@hp','@cf','@em','@bw0','@bw1','@bw2','@bd','@bdr','@sot','@bl0','@bl1','@bl2','@bl3','@gr0','@gr1','@wx','@bh','@ck0','@ck1','@gf0','@gf1','@gf2','@gf3','@cp','@ce','@cg'].concat(SHOPN.map((n,i)=>'@s'+i));const STREET_TEX=[];function streetSignTex(name){const k=STREET_TEX.findIndex(s=>s.n===name);if(k>=0)return STREET_TEX[k];if(name[0]==='@'&&name[1]!=='t'){const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return[c,c.getContext('2d')]};let c,g;const COL=['#1d5fb0','#f08a3a','#54b24a','#e0457b','#7a4fb0'];
   if(name==='@mu'){[c,g]=mk(1400,130);g.fillStyle='#1659a8';g.fillRect(0,0,1400,130);g.fillStyle='#fff';g.beginPath();g.moveTo(70,20);g.lineTo(120,20);g.lineTo(120,70);g.quadraticCurveTo(95,115,70,70);g.closePath();g.fill();g.fillStyle='#1659a8';g.fillRect(84,32,22,6);g.font='bold 78px system-ui,sans-serif';g.textBaseline='middle';g.textAlign='left';g.fillStyle='#fff';g.fillText('Municipalidad de Neuquén',160,70)}
   else if(name==='@cp'){[c,g]=mk(1200,260);g.translate(1200,0);g.scale(-1,1);g.fillStyle='#1d1a16';g.fillRect(0,0,1200,260);g.strokeStyle='#e8a33a';g.lineWidth=8;g.strokeRect(12,12,1176,236);g.fillStyle='#e8c27a';g.fillRect(70,58,16,130);g.fillRect(34,98,88,16);g.font='bold 100px system-ui,sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText('CAPILLA DEL POZO',150,100);g.font='600 54px system-ui,sans-serif';g.fillStyle='#f2efe6';g.fillText('REFUGIO · COMERCIO · PEDIDOS',150,190)}
+  else if(name==='@ce'||name==='@cg'){const e=name==='@ce';[c,g]=mk(1200,260);g.translate(1200,0);g.scale(-1,1);g.fillStyle=e?'#17335a':'#2a2118';g.fillRect(0,0,1200,260);g.strokeStyle=e?'#f2efe6':'#e8a33a';g.lineWidth=8;g.strokeRect(12,12,1176,236);g.fillStyle=e?'#f2efe6':'#e8c27a';g.font='bold 96px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e?'ESCUELA Nº 3':'GALPÓN DEL OLEODUCTO',600,100);g.font='600 52px system-ui,sans-serif';g.fillText('REFUGIO · COMERCIO · PEDIDOS',600,190)}
   else if(name==='@mn'){[c,g]=mk(700,380);g.fillStyle='#fff';g.fillRect(0,0,700,380);g.fillStyle='#1d5fb0';g.beginPath();g.ellipse(190,190,150,170,-.3,0,6.3);g.fill();g.fillStyle='#fff';g.beginPath();g.ellipse(215,150,70,40,.5,0,6.3);g.fill();g.fillStyle='#1d5fb0';g.font='bold 92px system-ui,sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText('neuquén',300,170);g.font='600 62px system-ui,sans-serif';g.fillStyle='#4a86c8';g.fillText('capital',305,260)}
   else if(name==='@mcA'||name==='@mcB'){const A=name==='@mcA'?8:4.6,W=1400,Hh=Math.round(W/A);[c,g]=mk(W,Hh);g.fillStyle='#fff';g.fillRect(0,0,W,Hh);const R=Hh*.48;let k=0;for(let x=-R;x<W+R;x+=R*1.5){const col=COL[k++%5],col2=COL[(k+2)%5];g.fillStyle=col;g.fillRect(x-R*.2,0,R*1.5,Hh);g.fillStyle='#fff';g.beginPath();g.arc(x+R*.55,Hh*.52,R*.82,0,6.3);g.fill();g.fillStyle=col2;g.beginPath();g.arc(x+R*.55,Hh*.52,R*.64,0,6.3);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(x+R*.55,Hh*.52,R*.38,0,6.3);g.fill();g.fillStyle=COL[(k+4)%5];g.beginPath();g.arc(x+R*.55,Hh*.52,R*.22,0,6.3);g.fill()}}
   else if(name==='@hp'){[c,g]=mk(1800,150);g.fillStyle='#0d4f9e';g.fillRect(0,0,1800,150);g.fillStyle='#fff';g.textBaseline='middle';g.textAlign='left';g.font='600 52px system-ui,sans-serif';g.fillText('HOSPITAL PROVINCIAL NEUQUÉN',50,78);g.font='300 48px system-ui,sans-serif';g.fillText('Dr. Eduardo Castro Rendon',1030,78)}
@@ -688,7 +689,7 @@ function dirSpecial(chase){const[n,tk]=spLive();if(n>=(chase?4:3))return;let t=S
 function wellEmerge(w){let made=0;const n=3+((R()*3)|0);for(let t=0;t<60&&made<n;t++){const a=R()*6.28,d=3+R()*4,x=w[0]+Math.cos(a)*d,z=w[1]+Math.sin(a)*d;const cx=CXo(x),cy=CXo(z);if(cx<0||cy<0||cx>=W||cy>=H||G[I(cx,cy)]!==0)continue;const q=mkZ(x,z,'chase',null);q.yaw=Math.atan2(P.x-x,P.z-z);made++;for(let k=0;k<6;k++)parts.push({x,y:.2,z,vx:(R()-.5)*3,vy:1+R()*2.5,vz:(R()-.5)*3,life:.8,sz:.06,c:[1,.55,.12],e:2,g:.8})}
  if(made){msg('Algo salió de un pozo...',3);noise(w[0],w[1],45)}}
 function citySpawn(n,type,chase,ang,arc){let made=0;for(let t=0;t<160&&made<n;t++){const a=(ang==null?R()*6.2832:ang+(R()-.5)*(arc||1)),d=(chase?20:30)+R()*(chase?14:34);const x=P.x+Math.sin(a)*d,z=P.z+Math.cos(a)*d;
-  const cx=CXo(x),cy=CXo(z);if(cx<0||cy<0||cx>=W||cy>=H||G[I(cx,cy)]!==0)continue;if(losClear(x,z,P.x,P.z))continue;if(CITY.refuge&&Math.hypot(x-CITY.refuge.x,z-CITY.refuge.z)<48)continue;
+  const cx=CXo(x),cy=CXo(z);if(cx<0||cy<0||cx>=W||cy>=H||G[I(cx,cy)]!==0)continue;if(losClear(x,z,P.x,P.z))continue;if((CITY.refuges||[]).some(q=>Math.hypot(x-q.x,z-q.z)<48))continue;
   const q=mkZ(x,z,chase?'chase':'idle',type);q.yaw=R()*6.28;made++}return made}
 function staminaUi(){let e=document.getElementById('stam');if(!e){e=document.createElement('div');e.id='stam';e.style.cssText='position:fixed;left:50%;bottom:44px;width:220px;height:7px;margin-left:-110px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);border-radius:4px;z-index:5;pointer-events:none;transition:opacity .3s';e.innerHTML='<div style="height:100%;width:100%;border-radius:3px"></div>';document.body.appendChild(e)}
  const f=e.firstChild;f.style.width=(P.st*100)+'%';f.style.background=P.tired?'#d8552f':(P.st<.3?'#e8b030':'#7fd6ff');e.style.opacity=(S==='play'&&LVL&&LVL.city&&(P.st<.99||P.sprint))?1:0}
@@ -761,19 +762,20 @@ document.addEventListener('keydown',e=>{if(!LVL||!LVL.city)return;
  else if(c==='KeyX'){e.preventDefault();e.stopImmediatePropagation();if(CARD==='offer')missionReject();else if(CARD==='cur')missionAbandon();cardClose()}
  else if(c==='Space'||c==='Escape'){e.preventDefault();e.stopImmediatePropagation();cardClose()}},true);
 
-// ====================================================== v25.3 REFUGIO "CAPILLA DEL POZO": gente, comercio con chapas, pedidos, descanso y guardias
-let REFN=null,GCD=0,HINT1=0;
-function refChars(){if(REFN)return REFN;REFN=CITY.refuge.npcs.map(n=>{const ch=skel(charTpl(n.n,n.rs||0));ch.at=Math.random()*5;return{n,ch}});return REFN}
-function refugeQueue(){const R=CITY.refuge;if(!R||!LVL||!LVL.city||Math.hypot(R.x-P.x,R.z-P.z)>75)return;
- for(const o of refChars()){const n=o.n,ch=o.ch;let yaw=n.yaw;if(n.role!=='guardia'&&Math.hypot(n.x-P.x,n.z-P.z)<9)yaw=Math.atan2(P.x-n.x,P.z-n.z);
+// ====================================================== v25.3 REFUGIOS (Capilla del Pozo, Escuela, Galpón): gente, comercio con chapas, pedidos, descanso y guardias
+let GCD=0,HINT1=0,TRADER=null;
+const refNear=r=>{for(const R of CITY.refuges||[])if(Math.hypot(R.x-P.x,R.z-P.z)<r)return R;return null};
+function refChars(R){if(R._n)return R._n;R._n=R.npcs.map(n=>{const ch=skel(charTpl(n.n,n.rs||0));ch.at=Math.random()*5;return{n,ch}});return R._n}
+function refugeQueue(){if(!LVL||!LVL.city)return;const R=refNear(75);if(!R)return;
+ for(const o of refChars(R)){const n=o.n,ch=o.ch;let yaw=n.yaw;if(n.role!=='guardia'&&Math.hypot(n.x-P.x,n.z-P.z)<9)yaw=Math.atan2(P.x-n.x,P.z-n.z);
   ch.rootM=GEN.mM(GEN.mT(n.x,n.y||0,n.z),GEN.mM(GEN.mRY(yaw),GEN.mS(ch.scale,ch.scale,ch.scale)));ch.at+=1/60;GEN.pose(ch,'idle',ch.at);queueChar(ch,[1,1,1])}}
 const refD=a=>Math.hypot(a[0]-P.x,a[1]-P.z);
-function refugeHint(){const R=CITY.refuge;if(!R||S!=='play'||CARD||!LVL||!LVL.city)return'';
+function refugeHint(){if(S!=='play'||CARD||!LVL||!LVL.city)return'';const R=refNear(30);if(!R)return'';
  if(refD(R.trader)<3.6)return'Comerciar · '+(P.chapas|0)+' chapas';
  if(refD(R.table)<3.4)return'Hablar con la jefa (pedidos)';
  if(refD(R.bunk)<3.2)return'Descansar y guardar partida';return''}
-function refugeInteract(){const R=CITY.refuge;if(!R||S!=='play'||CARD||!LVL||!LVL.city)return false;
- if(refD(R.trader)<3.6){openTrade();return true}
+function refugeInteract(){if(S!=='play'||CARD||!LVL||!LVL.city)return false;const R=refNear(30);if(!R)return false;
+ if(refD(R.trader)<3.6){openTrade(R);return true}
  if(refD(R.table)<3.4){if(MOFF>=0)showCard('offer',MISSIONS[MOFF],MOFF);else if(MI>=0&&!MISSIONS[MI].done)showCard('cur',MISSIONS[MI],MI);else{MNEXT=Math.min(MNEXT,.2);msg('Jefa: «Dejame ver qué hace falta...»',3)}return true}
  if(refD(R.bunk)<3.2){P.hp=100;P.poison=0;msg('Descansás un rato. Partida guardada.',3);try{ZM.save()}catch(e){}return true}
  return false}
@@ -784,19 +786,20 @@ const TRADE_ITEMS=[
  {n:'Bengala x2',p:10,f:()=>{WS.Bengala.res=Math.min(8,WS.Bengala.res+2)}}];
 (()=>{const st=document.createElement('style');st.textContent='#trade{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,6,8,.72);z-index:61;font-family:system-ui,sans-serif}#trade .c{background:#15110d;border:2px solid #e8a33a;box-shadow:0 10px 50px #000;padding:20px 26px;min-width:min(440px,92vw);color:#f2efe6}#trade .k{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#e8c27a}#trade .n{font-size:24px;font-weight:700;margin:2px 0 4px}#trade .q{font-style:italic;color:#cbbf9f;margin-bottom:12px;font-size:15px}#trade .it{display:flex;justify-content:space-between;gap:14px;padding:8px 10px;border:1px solid #4a3d29;margin:6px 0;cursor:pointer;background:#1d1812}#trade .it b{color:#e8c27a}#trade .it.no{opacity:.45}#trade .f{margin-top:10px;font-size:13px;color:#9d927a}';document.head.appendChild(st);
  const d=document.createElement('div');d.id='trade';d.innerHTML='<div class="c"></div>';document.body.appendChild(d);d.addEventListener('click',e=>{const it=e.target.closest('.it');if(it)tradeBuy(+it.dataset.i);else if(!e.target.closest('.c'))cardClose()})})();
-function tradeRender(note){const el=document.querySelector('#trade .c');el.innerHTML='<div class="k">Capilla del Pozo · Comerciante</div><div class="n">Don Nacho</div><div class="q">«'+(note||'Acá se cambia todo por chapas. Lo que juntás afuera, valga lo que valga.')+'»</div>'+TRADE_ITEMS.map((t,i)=>'<div class="it'+((P.chapas|0)<t.p?' no':'')+'" data-i="'+i+'"><span>'+(i+1)+' · '+t.n+'</span><b>'+t.p+' chapas</b></div>').join('')+'<div class="f">Tenés '+(P.chapas|0)+' chapas · 1-4 comprar · E o Enter: salir</div>'}
-function openTrade(){tradeRender();document.getElementById('trade').style.display='flex';CARD='trade';for(const kk in keys)keys[kk]=false}
+function tradeRender(note){const el=document.querySelector('#trade .c'),R=TRADER||{};el.innerHTML='<div class="k">'+(R.name||'Refugio')+' · Comerciante</div><div class="n">'+(R.tname||'Comerciante')+'</div><div class="q">«'+(note||'Acá se cambia todo por chapas. Lo que juntás afuera, valga lo que valga.')+'»</div>'+TRADE_ITEMS.map((t,i)=>'<div class="it'+((P.chapas|0)<t.p?' no':'')+'" data-i="'+i+'"><span>'+(i+1)+' · '+t.n+'</span><b>'+t.p+' chapas</b></div>').join('')+'<div class="f">Tenés '+(P.chapas|0)+' chapas · 1-4 comprar · E o Enter: salir</div>'}
+function openTrade(R){TRADER=R||CITY.refuge;tradeRender();document.getElementById('trade').style.display='flex';CARD='trade';for(const kk in keys)keys[kk]=false}
 function tradeBuy(i){const t=TRADE_ITEMS[i];if(!t)return;if((P.chapas|0)<t.p){tradeRender('Te faltan chapas, pibe.');return}P.chapas-=t.p;t.f();AU.pick&&AU.pick();tradeRender('Hecho. ¿Algo más?')}
-function mapRefuge(g,X,Y,sc){const R=CITY.refuge;if(!R)return;const rr=Math.max(14,22*sc*1.6);g.strokeStyle='#e8a33a';g.lineWidth=3;g.fillStyle='#e8a33a55';g.beginPath();g.arc(X(R.x),Y(R.z),rr,0,6.3);g.fill();g.stroke();g.fillStyle='#fff';g.font='bold 14px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#0a1018';g.strokeText('Capilla del Pozo',X(R.x),Y(R.z)-rr-4);g.fillText('Capilla del Pozo',X(R.x),Y(R.z)-rr-4)}
-function refugeUpdate(dt){const R=CITY.refuge;if(!R||!LVL||!LVL.city||S!=='play')return;
- if(!HINT1&&time>14){HINT1=1;msg('Hay un refugio cerca: la Capilla del Pozo ('+(Math.hypot(R.x-P.x,R.z-P.z)|0)+' m). Comerciá, pedí misiones y descansá. Está en el mapa (M).',7)}
- GCD-=dt;if(GCD>0)return;GCD=.9;let best=null,bd=32;
- for(const z of zs){if(z.state==='dead'||z.hidden)continue;const d=Math.hypot(z.x-R.x,z.z-R.z);if(d<bd){bd=d;best=z}}
- if(!best)return;const gs=R.npcs.filter(n=>n.role==='guardia'),g=gs[(Math.random()*gs.length)|0];
- const dx=best.x-g.x,dz=best.z-g.z,dd=Math.hypot(dx,dz)||1;
- for(let k=0;k<8;k++){const u=(k+1)/8;parts.push({x:g.x+dx*u,y:5.4-(5.4-1.1)*u,z:g.z+dz*u,vx:0,vy:0,vz:0,life:.12,sz:.05,c:[1,.9,.6],e:3,g:0})}
- try{AU.noise(.12,'bandpass',1800,500,.3*AU.sp(g.x,g.z).g,AU.sp(g.x,g.z).pan,.1)}catch(e){}
- best.hit=.15;best.hp-=best.tank?60:26;if(best.hp<=0)killZ(best,false,dx/dd,dz/dd)}
+function mapRefuge(g,X,Y,sc){for(const R of CITY.refuges||[]){const rr=Math.max(14,22*sc*1.6);g.strokeStyle='#e8a33a';g.lineWidth=3;g.fillStyle='#e8a33a55';g.beginPath();g.arc(X(R.x),Y(R.z),rr,0,6.3);g.fill();g.stroke();g.fillStyle='#fff';g.font='bold 14px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#0a1018';g.strokeText(R.name,X(R.x),Y(R.z)-rr-4);g.fillText(R.name,X(R.x),Y(R.z)-rr-4)}}
+function refugeUpdate(dt){const R0=CITY.refuge;if(!R0||!LVL||!LVL.city||S!=='play')return;
+ if(!HINT1&&time>14){HINT1=1;msg('Hay refugios con comercio, pedidos y descanso: el más cercano es '+(()=>{let b=null,bd=1e9;for(const R of CITY.refuges){const d=Math.hypot(R.x-P.x,R.z-P.z);if(d<bd){bd=d;b=R}}return b.name+' ('+(bd|0)+' m)'})()+'. Están en el mapa (M).',8)}
+ GCD-=dt;if(GCD>0)return;GCD=.9;
+ for(const R of CITY.refuges){if(Math.hypot(R.x-P.x,R.z-P.z)>90)continue;let best=null,bd=32;
+  for(const z of zs){if(z.state==='dead'||z.hidden)continue;const d=Math.hypot(z.x-R.x,z.z-R.z);if(d<bd){bd=d;best=z}}
+  if(!best)continue;const gs=R.npcs.filter(n=>n.role==='guardia'),g=gs[(Math.random()*gs.length)|0];
+  const dx=best.x-g.x,dz=best.z-g.z,dd=Math.hypot(dx,dz)||1;
+  for(let k=0;k<8;k++){const u=(k+1)/8;parts.push({x:g.x+dx*u,y:5.4-(5.4-1.1)*u,z:g.z+dz*u,vx:0,vy:0,vz:0,life:.12,sz:.05,c:[1,.9,.6],e:3,g:0})}
+  try{AU.noise(.12,'bandpass',1800,500,.3*AU.sp(g.x,g.z).g,AU.sp(g.x,g.z).pan,.1)}catch(e){}
+  best.hit=.15;best.hp-=best.tank?60:26;if(best.hp<=0)killZ(best,false,dx/dd,dz/dd)}}
 
 // ====================================================== CAPÍTULO 1 · parte 2: calle Buenos Aires → Joaquín V. González → plaza San Martín (nivel propio, cajas)
 // Coordenadas del nivel (m): x 0..56 (oeste→este), z 0..172 (sur→norte). Arranque frente al hospital (z 10, mirando al norte).
@@ -2328,7 +2331,7 @@ function charTplObj(ch){
  return tpl}
 function skel(tpl){const js=[],J={};for(const t of tpl.js){const j={n:t.n,p:t.p>=0?js[t.p]:null,t:t.rest.slice(),rest:t.rest,r:[0,0,0],w:GEN.mI()};js.push(j);J[t.n]=j}
  const ch={js,J,rootM:GEN.mI(),gait:tpl.gait,zombie:tpl.zombie,lieY:tpl.lieY,scale:tpl.scale,hooks:{},state:{},tpl,
-  update(){for(const j of js){const L=GEN.mM(GEN.mT(j.t[0],j.t[1],j.t[2]),GEN.mE(j.r[0],j.r[1],j.r[2]));j.w=j.p?GEN.mM(j.p.w,L):GEN.mM(this.rootM,L)}}};
+  update(){for(const j of js){let L=GEN.mM(GEN.mT(j.t[0],j.t[1],j.t[2]),GEN.mE(j.r[0],j.r[1],j.r[2]));if(j.sc&&j.sc!==1)L=GEN.mM(L,GEN.mS(j.sc,j.sc,j.sc));j.w=j.p?GEN.mM(j.p.w,L):GEN.mM(this.rootM,L)}}};
  return ch}
 const JBUF=new Float32Array(28*16);
 const CHARQ=[];   // [ch, tint] a dibujar este frame
@@ -2360,6 +2363,7 @@ function poseZ(z,dt){const ch=zChar(z),J=ch.J,k=z.sc;const dead=z.state==='dead'
  if(!quad&&chase&&anim!=='act'){const q=sp>3?1.6:1;J.spine.r[0]+=.22*q;J.chest.r[1]+=Math.sin(ch.at*5.1)*.25*q;J.chest.r[2]+=Math.sin(ch.at*2.6)*.14;J.head.r[2]+=Math.sin(ch.at*3.3)*.28;J.head.r[0]+=.18;
   J.shL.r[2]+=Math.sin(ch.at*4)*.22;J.shR.r[0]-=.3+Math.sin(ch.at*3)*.28;J.shL.r[0]-=.2+Math.sin(ch.at*3.4+1)*.28;J.elL.r[0]-=.35;J.elR.r[0]-=.45}
  if(false&&z.fy&&z.sp==='Polilla'){const fl=Math.sin(ch.at*26)*.9;J.wL.r[2]=.35+fl;J.wR.r[2]=-.35-fl;J.root.r[0]-=.3+Math.min(.5,Math.max(0,(2.2-z.fy)*.3));J.hipL.r[0]+=.5;J.hipR.r[0]+=.35}
+ if(J.sac){const hpF=1-Math.max(0,z.hp)/(z.hpMax||1);z.infl=Math.min(1,(z.infl||0)+dt*(chase?(Math.hypot(z.x-P.x,z.z-P.z)<8?.22:.1):0));const inf=Math.max(z.infl,hpF*.6);J.sac.sc=1+.55*inf+Math.sin(ch.at*(5+inf*9))*.06*inf;J.sac.r[2]+=Math.sin(ch.at*7)*.03*inf}
  ch.update();ch.noHead=z.noHead}
 function renderZ(z){if(z.hidden||Math.hypot(z.x-P.x,z.z-P.z)>42)return;const ch=zChar(z);const hit=z.hit>0?[1.6,.6,.6]:(z.burn>0?[1.4,.9,.5]:(z.sp?[1,1,1]:[.74,.72,.66]));if(z.burn>0)z.burn-=1/60;queueChar(ch,hit)}
 
@@ -3062,7 +3066,7 @@ const ZM=(()=>{
  return{show,hide,pause,main:()=>show('main'),apply,CFG,save}})();
 if(!TEST){ZM.main();ZM.apply()}
 
-window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get REF(){return CITY.refuge},get CARD(){return CARD},get tradeBuy(){return typeof tradeBuy==='function'?tradeBuy:null},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},get DRAWN(){return DRAWN},keys,cardClose,castRay,get LAMPS(){return LAMPS},cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
+window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get REF(){return CITY.refuge},get REFS(){return CITY.refuges},get CARD(){return CARD},get tradeBuy(){return typeof tradeBuy==='function'?tradeBuy:null},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},get DRAWN(){return DRAWN},keys,cardClose,castRay,get LAMPS(){return LAMPS},cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
 requestAnimationFrame(frame);
 </script>
 <script src="data/mevdata.js"></script>
