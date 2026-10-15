@@ -36,9 +36,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #ld .bar{width:min(420px,70vw);height:6px;background:#16202b;border-radius:3px;overflow:hidden}#ld .bar i{display:block;width:40%;height:100%;background:#c24a3a;animation:ldm 1.1s ease-in-out infinite alternate}
 @keyframes ldm{from{transform:translateX(-30%)}to{transform:translateX(160%)}}
 .mb{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}.mb button{font:600 14px system-ui,sans-serif;letter-spacing:.12em;padding:10px 18px;background:#0e151d;color:#cfe3f5;border:1px solid #2b3b4c;border-radius:4px;cursor:pointer}.mb button:hover{background:#1b2a3a}#bm{margin-top:10px;font-size:13px;opacity:.85;min-height:18px}
-#nb{display:flex;gap:6px;margin-top:5px}.nbar{flex:1;height:6px;background:rgba(0,0,0,.5);border:1px solid #555;border-radius:2px;overflow:hidden}.nbar i{display:block;height:100%;width:100%}#hun{background:#d08a2e}#thi{background:#3a8fd8}</style></head><body><div id="ld"><h1>ZONA MUERTA</h1><p>Neuquén centro</p><div class="bar"><i></i></div><p id="ldt" style="margin-top:22px">CARGANDO LA CIUDAD…</p></div>
+#nb{display:flex;gap:6px;margin-top:5px}.nbar{flex:1;height:6px;background:rgba(0,0,0,.5);border:1px solid #555;border-radius:2px;overflow:hidden}.nbar i{display:block;height:100%;width:100%}#hun{background:#d08a2e}#thi{background:#3a8fd8}#face{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;background:radial-gradient(ellipse 34% 30% at 50% 52%,rgba(14,10,8,.98) 0%,rgba(14,10,8,.97) 55%,rgba(8,6,5,.75) 70%,rgba(0,0,0,.35) 100%);transition:opacity .15s}#face:before{content:'';position:absolute;left:50%;top:50%;width:46vw;height:42vh;margin:-21vh 0 0 -23vw;border-radius:50%;box-shadow:0 0 90px 60px rgba(10,8,6,.9);background:radial-gradient(circle at 42% 40%,#2a241e 0,#15110d 45%,#0a0806 100%)}</style></head><body><div id="ld"><h1>ZONA MUERTA</h1><p>Neuquén centro</p><div class="bar"><i></i></div><p id="ldt" style="margin-top:22px">CARGANDO LA CIUDAD…</p></div>
 <canvas id="c"></canvas>
-<div id="pois"></div><div id="hud">
+<div id="pois"></div><div id="face"></div><div id="hud">
  <div id="vig"></div><div id="hurt"></div>
  <div id="cross"></div>
  <div id="obj"></div><div id="msg"></div><div id="hint"></div>
@@ -694,29 +694,44 @@ function citySpawn(n,type,chase,ang,arc){let made=0;for(let t=0;t<160&&made<n;t+
   const q=mkZ(x,z,chase?'chase':'idle',type);q.yaw=R()*6.28;made++}return made}
 function staminaUi(){let e=document.getElementById('stam');if(!e){e=document.createElement('div');e.id='stam';e.style.cssText='position:fixed;left:50%;bottom:44px;width:220px;height:7px;margin-left:-110px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);border-radius:4px;z-index:5;pointer-events:none;transition:opacity .3s';e.innerHTML='<div style="height:100%;width:100%;border-radius:3px"></div>';document.body.appendChild(e)}
  const f=e.firstChild;f.style.width=(P.st*100)+'%';f.style.background=P.tired?'#d8552f':(P.st<.3?'#e8b030':'#7fd6ff');e.style.opacity=(S==='play'&&LVL&&LVL.city&&(P.st<.99||P.sprint))?1:0}
-function cityDirector(dt){cityDirT-=dt;if(cityDirT>0)return;cityDirT=1;
- let near=0,chasing=0,live=0,pol=0;for(let i=zs.length-1;i>=0;i--){const z=zs[i];const d=Math.hypot(z.x-P.x,z.z-P.z);if(d>130&&!z.corpse&&(z.state!=='dead'||z.deadT>4)){zs.splice(i,1);continue}if(z.state!=='dead'){live++;if(d<90)near++;if(z.state!=='idle'&&d<70)chasing++;if(z.sp==='Polilla')pol++}}
+// ---------- v26.1 DIRECTOR POR POBLACIÓN: hay siempre POP criaturas; las bajas se reponen desde los pozos y caminan hacia vos
+const POP={total:60,pool:0,respawn:[],seeded:false};
+const MIX=[['Nurru',.40],['',.25],['Garrafero',.14],['Polilla',.10],['Nakru',.07],['Topo',.04]];
+function mixPick(){let r=R();for(const[t,p]of MIX){r-=p;if(r<=0)return t||null}return null}
+function popLive(){let n=0;for(const z of zs)if(z.state!=='dead')n++;return n}
+function popSeed(){POP.seeded=true;POP.pool=POP.total;POP.respawn=[];zs.length=0;
+ // 20% deambulando por la ciudad desde el arranque (lejos del refugio)
+ let made=0;for(let t=0;t<400&&made<Math.round(POP.total*.2);t++){const x=R()*W*CS,z=R()*H*CS;const cx=CXo(x),cy=CXo(z);if(cx<0||cy<0||cx>=W||cy>=H||G[I(cx,cy)]!==0)continue;if(Math.hypot(x-P.x,z-P.z)<60||(CITY.refuges||[]).some(q=>Math.hypot(x-q.x,z-q.z)<48))continue;const q=mkZ(x,z,'idle',mixPick());q.yaw=R()*6.28;q.far=true;made++}
+ POP.pool-=made}
+// aparece desde el pozo más cercano, en el borde de simulación (110 m), caminando hacia el jugador
+function popEmerge(n,chase){if(POP.pool<=0)return 0;const wells=CITY.wells||[];let made=0;
+ for(let k=0;k<n&&POP.pool>0;k++){let best=null,bd=1e9;for(const w of wells){const d=Math.hypot(w[0]-P.x,w[1]-P.z);if(d<bd){bd=d;best=w}}
+  const ang=best?Math.atan2(best[0]-P.x,best[1]-P.z):R()*6.28;let ok=false;
+  for(let t=0;t<40&&!ok;t++){const a=ang+(R()-.5)*1.2,d=bd<110&&best?bd:95+R()*20;const x=P.x+Math.sin(a)*d,z=P.z+Math.cos(a)*d;const cx=CXo(x),cy=CXo(z);if(cx<0||cy<0||cx>=W||cy>=H||G[I(cx,cy)]!==0)continue;if((CITY.refuges||[]).some(q=>Math.hypot(x-q.x,z-q.z)<48))continue;
+   const q=mkZ(x,z,chase?'chase':'idle',mixPick());q.yaw=Math.atan2(P.x-x,P.z-z);q.roam=!chase;q.wx=P.x+(R()-.5)*40;q.wz=P.z+(R()-.5)*40;ok=true;made++;POP.pool--;if(best&&bd<110)for(let j=0;j<6;j++)parts.push({x,y:.2,z,vx:(R()-.5)*3,vy:1+R()*2.5,vz:(R()-.5)*3,life:.8,sz:.06,c:[1,.55,.12],e:2,g:.8})}}
+ return made}
+function cityDirector(dt){cityDirT-=dt;if(cityDirT>0)return;cityDirT=1;if(!POP.seeded)popSeed();
+ // bajas vuelven al pozo a los 25 s
+ for(let i=POP.respawn.length-1;i>=0;i--){POP.respawn[i]-=1;if(POP.respawn[i]<=0){POP.respawn.splice(i,1);POP.pool++}}
+ let near=0,chasing=0,live=0;for(let i=zs.length-1;i>=0;i--){const z=zs[i];const d=Math.hypot(z.x-P.x,z.z-P.z);
+  if(z.state==='dead'){if(z.hidden||(!z.corpse&&z.deadT>4&&d>130))zs.splice(i,1);continue}
+  if(d>150&&!z.far){zs.splice(i,1);POP.pool++;continue}  // se aleja: vuelve al pozo (no se pierde)
+  live++;if(d<90)near++;if(z.state!=='idle'&&d<70)chasing++}
  const night=dayLight()<.3,m=MI>=0?MISSIONS[MI]:null,carry=!!(m&&m.got&&!m.done);
  let amm=0;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun')amm+=q.res===Infinity?999:q.res}
- const weak=P.hp<35||amm<24,cap=weak?24:38,k=(night?1.3:1)*(carry?1.25:1)*(1+Math.min(MDONE,8)*.07);
- DIR.t-=1;DIR.pol-=1;DIR.sp-=1;DIR.well-=1;
- if(DIR.well<=0&&!weak&&CITY.wells&&CITY.wells.length){const ws=CITY.wells.map(w=>[Math.hypot(w[0]-P.x,w[1]-P.z),w]).filter(a=>a[0]>55&&a[0]<115).sort((a,b)=>a[0]-b[0]);if(ws.length){wellEmerge(ws[0][1]);DIR.well=55+R()*45}else DIR.well=12}
- // ambiente: zombis quietos repartidos por la ciudad
- const want=night?16:10;if(near-chasing<want-4&&live<cap){citySpawn(Math.min(3,want-near),null,false);if(R()<.35)dirSpecial(false)}
- if(DIR.sp<=0&&DIR.ph!=='relax'&&!weak){dirSpecial(true);DIR.sp=28+R()*25}
- if(DIR.ph==='build'){
-  const w=Math.round((4+MDONE*.4)*k*(weak?.6:1));if(chasing<w&&live<cap)citySpawn(Math.min(2,w-chasing),null,true,P.yaw+(R()<.7?0:3.14),2.6);
-  if(DIR.pol<=0&&!pol&&!weak){citySpawn(1,'Polilla',true);DIR.pol=50+R()*40;msg('Se escucha un graznido en el cielo...',3)}
-  if(DIR.t<=0){DIR.ph='peak';DIR.t=14+R()*8;const n=Math.round((7+Math.min(MDONE,8))*k*(weak?.55:1));
-   const a=R()*6.28;const pinza=R()<.5;
-   if(pinza){citySpawn(Math.ceil(n/2),null,true,a,.8);citySpawn(Math.floor(n/2),null,true,a+3.14,.8)}else citySpawn(n,null,true,a,1.2);
-   if(!weak){dirSpecial(true);if(R()<.4)dirSpecial(true)}
-   msg(pinza?'¡Vienen de dos lados!':'¡HORDA!',3);noise(P.x,P.z,40)}}
- else if(DIR.ph==='peak'){
-  const w=Math.round((9+MDONE*.6)*k*(weak?.5:1));if(chasing<w&&live<cap+6)citySpawn(Math.min(3,w-chasing),null,true);
-  if(DIR.t<=0){DIR.ph='relax';DIR.t=weak?36:16+R()*12}}
- else{ // relax: respiro, sólo el ambiente
-  if(DIR.t<=0){DIR.ph='build';DIR.t=18+R()*22}}}
+ const weak=P.hp<35||amm<24,k=(night?1.3:1)*(carry?1.2:1)*(1+Math.min(MDONE,8)*.06);
+ DIR.t-=1;
+ // ambiente: que siempre haya criaturas cerca, llegando desde los pozos
+ const want=Math.round((night?14:9)*k);if(near<want)popEmerge(Math.min(3,want-near),false);
+ if(DIR.ph==='build'){const w=Math.round((3+MDONE*.4)*k*(weak?.6:1));if(chasing<w)popEmerge(Math.min(2,w-chasing),true);
+  if(DIR.t<=0){DIR.ph='peak';DIR.t=14+R()*8;
+   // horda: junta a las que ya están cerca y suma las que faltan desde el pozo
+   let n=0;for(const z of zs){if(z.state==='idle'&&Math.hypot(z.x-P.x,z.z-P.z)<120){z.state='chase';n++}}
+   const extra=Math.round((6+Math.min(MDONE,8))*k*(weak?.5:1))-n;if(extra>0)popEmerge(extra,true);
+   msg('¡HORDA!',3);noise(P.x,P.z,40)}}
+ else if(DIR.ph==='peak'){if(DIR.t<=0){DIR.ph='relax';DIR.t=weak?40:18+R()*12}}
+ else{if(DIR.t<=0){DIR.ph='build';DIR.t=20+R()*25}}}
+
 
 // ---------- catástrofe (runtime): fuegos fijos con luz y cuerpos que aparecen cerca
 let CFA=[],CCL=new Map(),catT=0;
@@ -1401,6 +1416,7 @@ function pose(ch,anim,t){
   if(g.quad==='gorilla'){gorPose(ch,anim,t);ch.update();return}
   if(g.quad==='worm'){wormPose(ch,anim,t);ch.update();return}
   if(g.quad==='condor'){condorPose(ch,anim,t);ch.update();return}
+  if(g.quad==='tick'){const J=ch.J;const w=anim==='idle'?0:1;J.root.t[1]+=Math.abs(Math.sin(t*14))*.06*w;J.root.r[2]=Math.sin(t*14)*.18*w;J.root.r[0]=anim==='act'?-.8:0;ch.update();return}
   const zom=ch.zombie;
   const walking=anim==='walk'||anim==='run',run=anim==='run'?1:0;
   const ph=t*TAU*(run?1.5:.9)*g.speed*g.cad,amp=(run?.78:.44)*g.amp;
@@ -2094,6 +2110,20 @@ function boarPose(ch,anim,t){
     J.root.t[2]+=.2*up*(1-rec);Rt('spine',-.05*dip+.12*up*(1-rec));Rt('shL',-.3*up*(1-rec));Rt('shR',-.3*up*(1-rec))}
 }
 
+// ---- v26.1 Nurrucapa: garrapata grande que se prende a la cara y posee al humano ----
+function tickParts(ch,jn,off,sc){const s=sc||1;const body={c:C('#1a1612'),tex:0,rough:.35,spec:.5,bump:.2},leg={c:C('#2a2420'),tex:0,rough:.6,spec:.2},glow={c:AMBC,tex:0,rough:.3,emis:emA(1)};
+  const [ox,oy,oz]=off;
+  ch.part(jn,ell(.075*s,.055*s,.09*s,8,12),body,at(ox,oy,oz));
+  ch.part(jn,ell(.03*s,.025*s,.035*s,5,8),body,at(ox,oy-.01*s,oz+.085*s));
+  for(const sd of[1,-1]){ch.part(jn,ell(.008*s,.008*s,.008*s,3,5),glow,at(ox+sd*.018*s,oy+.012*s,oz+.11*s));
+    for(let k=0;k<4;k++){const a=-.6+k*.5;const L=.11*s;ch.part(jn,tube([ox+sd*.05*s,oy,oz+(.05-k*.035)*s],[ox+sd*(.05+L*Math.cos(a)*.6)*s,oy-.06*s-k*.012*s,oz+(.05-k*.035)*s+L*Math.sin(a)*.3],.007*s,.003*s),leg,mI())}}}
+{const names=['Vecino','Mujer','Obrero','Pibe','Policia'];
+ DEFS.Nurru=function(rs){rs=rs||0;const base=DEFS['H_'+names[rs%names.length]]||DEFS.H_Vecino;const ch=base(rs);ch.name='Nurru';
+  tickParts(ch,'head',[0,.03,.09],1.9);
+  if(ch.info)ch.info=Object.assign({},ch.info,{nombre:'Poseído por Nurrucapa'});return ch}}
+// la garrapata suelta (cuando matás al poseído por el cuerpo)
+DEFS.Garrapata=function(rs){const ch=new Char('Garrapata',{h:.3});ch.scale=1;ch.jt('root',null,[0,.12,0]);ch.H=.3;tickParts(ch,'root',[0,0,0],2.6);ch.gait={quad:'tick'};return ch};
+
 // ====================================================== v25.2 · NICA (gorila saltador) y NALOMA (cóndor)
 const NFUR=C('#3e3e3e'),NFURL=C('#404040'),NFACE=C('#4a4a4a'),NFACED=C('#2a2a2a');
 function Nica(rs){
@@ -2458,7 +2488,7 @@ function mkZ(x,z,state,type){const tank=type==='tank'||type==='Hinchado';
  const z0={id:++zid,tank,x,z,yaw:R()*6.28,vx:0,vz:0,hp:tank?2600:42+R()*20,state,t:R()*6,sc:tank?1.15:.93+R()*.14,r:tank?.62:.3,
   spd:tank?5.0:3.4+R()*2.4,spdNow:0,atk:0,atkCd:0,stag:0,deadT:0,noHead:false,fall:R()<.5?-1:1,wT:R()*3,wx:x,wz:z,gT:2+R()*7,hit:0,
   skin:tank?[.52,.58,.5]:SKIN[(R()*SKIN.length)|0],shirt:tank?[.25,.2,.2]:SHIRT[(R()*SHIRT.length)|0],pants:tank?[.12,.12,.14]:PANTS[(R()*PANTS.length)|0],limp:R()<.25};
- z0.hpMax=z0.hp;if(tank){z0.sp='Hinchado';z0.r=.44}else if(type&&SPDAT[type])spInit(z0,type);else if(!type){const r=R();const mix=r<.4?null:r<.66?'Garrafero':r<.84?'Topo':r<.94?'Polilla':'Nakru';if(mix){spInit(z0,mix);z0.weak=true;z0.hp=z0.hpMax=Math.round(SPDAT[mix].hp*.3);z0.dmg=Math.round(SPDAT[mix].dmg*.6)}}zs.push(z0);return z0}
+ z0.hpMax=z0.hp;if(tank){z0.sp='Hinchado';z0.r=.44}else if(type&&SPDAT[type])spInit(z0,type);else if(!type){z0.hp=z0.hpMax=60}zs.push(z0);return z0}
 function wake(z,loud){if(z.state!=='idle')return;z.state='chase';z.gT=1+R();if(loud!==false)AU.groan(z.x,z.z,true);
  for(const o of zs)if(o!==z&&o.state==='idle'&&Math.hypot(o.x-z.x,o.z-z.z)<9&&R()<.6)o.state='chase'}
 function noise(x,z,rad){for(const q of zs)if(q.state==='idle'&&Math.hypot(q.x-x,q.z-z)<rad&&R()<.7)wake(q,false)}
@@ -2505,7 +2535,7 @@ function updZ(z,dt){
 function hurtP(dmg,sx,sz,knock){if(P.hp<=0)return;P.hp-=dmg;P.hurt=Math.min(1,P.hurt+.5+dmg/40);P.shake=Math.max(P.shake,.6);P.regen=6;AU.hurt();
  if(knock){const dx=P.x-sx,dz=P.z-sz,d=Math.hypot(dx,dz)||1;P.pvx=dx/d*9;P.pvz=dz/d*9}
  if(P.hp<=0){P.hp=0;S='dead';document.exitPointerLock&&document.exitPointerLock();showOv('TE INFECTARON','Bajas: '+P.kills+'  ·  R para reintentar',true)}}
-function killZ(z,head,dx,dz){if(z.sp==='Garrafero'&&!z.exploded){garrafaBoom(z);return}z.state='dead';z.hidden=false;z.deadT=0;z.noHead=head;P.kills++;P.chapas=(P.chapas|0)+(z.sp&&!z.weak?8:1);AU.die(z.x,z.z);
+function killZ(z,head,dx,dz){if(z.sp==='Garrafero'&&!z.exploded){garrafaBoom(z);return}if(z.sp==='Nurru'&&!head&&!z.ticked){z.ticked=true;const g=mkZ(z.x+(R()-.5)*.6,z.z+(R()-.5)*.6,'chase','Garrapata');g.yaw=Math.atan2(P.x-z.x,P.z-z.z);g.cd=.4;for(let k=0;k<8;k++)parts.push({x:z.x,y:1.5,z:z.z,vx:(R()-.5)*3,vy:1+R()*2,vz:(R()-.5)*3,life:.5,sz:.03,c:[.1,.08,.06],e:.2,g:.8})}z.state='dead';z.hidden=false;z.deadT=0;z.noHead=head;P.kills++;P.chapas=(P.chapas|0)+(({Nurru:1,Garrafero:4,Polilla:6,Nakru:10,Topo:15,Hinchado:40})[z.sp]||2);if(typeof POP!=='undefined')POP.respawn.push(25);AU.die(z.x,z.z);
  addDecal(z.x+dx*.5,z.z+dz*.5,1.4+R()*.8,6);if(head){for(let i=0;i<14;i++)blood(z.x,1.6*z.sc,z.z,dx,dz,4);addDecal(z.x+dx*1.5,z.z+dz*1.5,1.1,6)}
  if(z.tank){msg('¡El Hinchado cayó!',3);AU.tone(60,40,.8,'sine',.5,0,.3)}}
 function blood(x,y,z,dx,dz,sp){parts.push({x,y,z,vx:dx*sp*R()+(R()-.5)*2,vy:1+R()*2.5,vz:dz*sp*R()+(R()-.5)*2,life:.8+R()*.8,sz:.04+R()*.05,c:[.35+R()*.2,.02,.02],e:0,g:1})}
@@ -2558,7 +2588,7 @@ function shove(){P.shoveT=.45;P.shoveA=.2;AU.shove();
   if(z.state==='idle')wake(z,false);
   if(z.tank){z.vx=dx/d*1.5;z.vz=dz/d*1.5;z.stag=.15}else{z.stag=.9;z.vx=dx/d*9;z.vz=dz/d*9;z.hp-=6;AU.splat(z.x,z.z,.7);if(z.hp<=0)killZ(z,false,dx/d,dz/d)}}}
 function reload(){if(P.reload>0||P.mag>=30||P.res<=0)return;P.reload=.001;P.rph=0}
-function interact(){if(typeof refugeInteract==='function'&&refugeInteract())return;if(typeof needsInteract==='function'&&needsInteract())return;
+function interact(){if(P.face>0){P.face-=1.3;P.shake=Math.max(P.shake||0,.4);if(P.face<=0){P.face=0;msg('Lo arrancaste. Pisalo antes de que vuelva.',3);AU.splat&&AU.splat(P.x,P.z,.8)}return}if(typeof refugeInteract==='function'&&refugeInteract())return;if(typeof needsInteract==='function'&&needsInteract())return;
  let best=null,bd=3.2;const f=fwd();
  for(const d of DOORS){if(d.open>.5)continue;const dx=(d.cx+.5)*CS-P.x,dz=(d.cy+.5)*CS-P.z,dd=Math.hypot(dx,dz);if(dd<bd&&(dx*f[0]+dz*f[2])/dd>.3){bd=dd;best=d}}
  if(best){openDoor(best);return}
@@ -2606,7 +2636,7 @@ function nextLevel(){if(LVLN>=5){S='win';document.exitPointerLock&&document.exit
 // ====================================================== BUCLE
 let last=performance.now(),fpsA=0,fpsN=0,fpsT=0,hudN=0,stepT=0,hbT=0;
 function update(dt){
- if(CARD){return}time+=dt;if(typeof refugeUpdate==='function')refugeUpdate(dt);if(typeof needsUpdate==='function'&&LVL&&LVL.city)needsUpdate(dt);P.t+=dt;
+ if(CARD){return}time+=dt;if(P.face>0){P.face-=dt;P.hp-=4*dt;P.faceT=(P.faceT||0)+dt;if(P.hp<=0){P.hp=0;P.face=0}const fv=document.getElementById('face');if(fv){fv.style.opacity=Math.min(1,P.face*2);fv.style.transform='scale('+(1+Math.sin(P.faceT*9)*.03)+') rotate('+(Math.sin(P.faceT*5)*2)+'deg)'}}else{const fv=document.getElementById('face');if(fv&&fv.style.opacity!=='0')fv.style.opacity=0}if(typeof refugeUpdate==='function')refugeUpdate(dt);if(typeof needsUpdate==='function'&&LVL&&LVL.city)needsUpdate(dt);P.t+=dt;
  // puertas y compuerta
  for(const d of DOORS){if(d.mev&&d.mev.ref&&d.tgt===1&&Math.hypot((d.cx+.5)*CS-P.x,(d.cy+.5)*CS-P.z)>5){d.tgt=0;if(d.draw)AU.door&&AU.door((d.cx+.5)*CS,(d.cy+.5)*CS)}d.open=clamp(d.open+(d.tgt-d.open)*Math.min(1,dt*2.2)+Math.sign(d.tgt-d.open)*dt*.35,0,1)}
  gate.open=clamp(gate.open+Math.sign(gate.tgt-gate.open)*dt*.33,0,1);
@@ -2769,15 +2799,17 @@ function zFireUpdate(dt){for(const z of zs){if(!(z.fireT>0))continue;z.fireT-=dt
 // ====================================================== INFECTADOS ESPECIALES
 // Hinchado = el "tank" del prototipo. Los demás tienen stats propias y un comportamiento corto en spUpdate().
 const SPDAT={
- Polilla:  {hp:75, spd:5.6,dmg:4, reach:1.1,atk:.3,cd:.55,r:.26},
+ Polilla:  {hp:200, spd:5.6,dmg:4, reach:1.1,atk:.3,cd:.55,r:.26},
+ Nurru:    {hp:45, spd:3.6,dmg:8, reach:1.1,atk:.42,cd:1.1,r:.3},
+ Garrapata:{hp:20, spd:6.8,dmg:0, reach:1.2,atk:.3,cd:.9,r:.2},
  Acequiero:{hp:420,spd:1.7,dmg:18,reach:1.2,atk:.6,cd:1.6,r:.4},
  Imitador: {hp:190, spd:5.2,dmg:16,reach:1.1,atk:.4,cd:1.1,r:.3},
- Topo:     {hp:240, spd:4.2,dmg:20,reach:1.1,atk:.45,cd:1.4,r:.32},
- Garrafero:{hp:300,spd:3.8,dmg:10,reach:1.4,atk:.5,cd:1.5,r:.4},
+ Topo:     {hp:650, spd:4.2,dmg:20,reach:1.1,atk:.45,cd:1.4,r:.32},
+ Garrafero:{hp:160,spd:3.8,dmg:10,reach:1.4,atk:.5,cd:1.5,r:.4},
  Polvillo: {hp:220, spd:1.3,dmg:7, reach:1.1,atk:.5,cd:1.2,r:.34},
- Nakru:    {hp:260,spd:1.3,dmg:22,reach:1.9,atk:.5,cd:1.3,r:.45},
+ Nakru:    {hp:420,spd:1.3,dmg:22,reach:1.9,atk:.5,cd:1.3,r:.45},
  Hinchado: {hp:2600,spd:4.3,dmg:32,reach:1.7,atk:.75,cd:1.7,r:.44}};
-const SPNAME={Polilla:'Naloma',Acequiero:'Acequiero',Imitador:'Imitador',Topo:'Nica',Garrafero:'Nara',Nakru:'Nakru',Polvillo:'Polvillo',Hinchado:'Hinchado'};
+const SPNAME={Garrapata:'Nurrucapa',Nurru:'Poseído',Polilla:'Naloma',Acequiero:'Acequiero',Imitador:'Imitador',Topo:'Nica',Garrafero:'Nara',Nakru:'Nakru',Polvillo:'Polvillo',Hinchado:'Hinchado'};
 const LVL_SP=[['Polilla','Topo'],['Garrafero','Nakru'],['Topo','Polilla','Garrafero'],['Nakru','Garrafero','Topo'],['Polilla','Garrafero','Topo','Nakru']];
 let spCd=40;
 function spInit(z,name){const d=SPDAT[name];z.sp=name;z.hp=z.hpMax=d.hp;z.spd=d.spd;z.dmg=d.dmg;z.reach=d.reach;z.atkT=d.atk;z.atkCdT=d.cd;z.r=d.r;z.cd=0;z.limp=false;
@@ -2787,6 +2819,7 @@ function spInit(z,name){const d=SPDAT[name];z.sp=name;z.hp=z.hpMax=d.hp;z.spd=d.
 function spAttackFx(z){}
 // devuelve true si ya resolvió el movimiento del infectado este frame
 function spUpdate(z,dt){const n=z.sp;const dx=P.x-z.x,dz=P.z-z.z,d=Math.hypot(dx,dz);z.cd-=dt;
+ if(n==='Garrapata'){if(z.state==='idle'&&d<14){z.state='chase'}z.sc=.9;if(z.state==='chase'&&d<1.4&&z.cd<=0&&P.hp>0&&!(P.face>0)){P.face=6;P.faceT=0;z.state='dead';z.deadT=99;z.hidden=true;msg('¡Un Nurrucapa se te prendió a la cara! Apretá E varias veces para arrancarlo',4);AU.hurt();return true}return false}
  if(n==='Polilla'){{const ch=z.state==='chase';let tg=1.3+Math.sin(time*2+z.id)*.15;if(ch){if(d>7)tg=2.0+Math.sin(time*2.6+z.id)*.4;else if(z.atkCd>.25)tg=2.2;else tg=Math.max(.9,.9+(d-2)*.22)}z.fy=(z.fy===undefined?1.6:z.fy)+(tg-(z.fy===undefined?1.6:z.fy))*Math.min(1,dt*3.5)}
  if(z.state==='chase'&&z.stag<=0&&z.cd<=0&&d>3.5&&d<17&&losClear(z.x,z.z,P.x,P.z)){z.cd=2.4+R()*1.6;const y0=(z.fy||1.6)+.9,T=d/15,ty=P.y+1.25,vy=(ty-y0)/T+2*T;THROWS.push({kind:'Veneno',x:z.x+dx/d*.4,y:y0,z:z.z+dz/d*.4,vx:dx/d*15+(P.pvx||0)*.3,vy,vz:dz/d*15+(P.pvz||0)*.3,t:0});AU.noise(.25,'bandpass',600,1500,.6*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.2)}
  if(z.state==='chase'&&z.stag<=0){const s=Math.sin(time*9+z.id)*3.2*dt;collide(z.x+Math.cos(z.yaw)*s,z.z-Math.sin(z.yaw)*s,.1);z.x=CR.x;z.z=CR.z;if(R()<.25)parts.push({x:z.x+(R()-.5)*.4,y:1.2+R()*.6,z:z.z+(R()-.5)*.4,vx:(R()-.5),vy:.3,vz:(R()-.5),life:.4,sz:.02,c:[.8,.75,.6],e:.3,g:0})}return false}
