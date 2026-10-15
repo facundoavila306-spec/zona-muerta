@@ -545,7 +545,7 @@ function buildCiudad(){const M=MAPA;CITY.lm=M.lm;CITY.spots=M.spots;CITY.corpses
 // autos por la calle (fuera de las manzanas), después de generar
 function cityCars(){}
 // ---------- carteles de esquina (texturas generadas con el nombre de la calle)
-const SHOPN=['ALMACÉN','KIOSCO','FARMACIA','FERRETERÍA','PANADERÍA','CARNICERÍA','PELUQUERÍA','BAR','ROPA','LIBRERÍA'],SHOPK=['almacen','kiosco','farmacia','ferreteria','panaderia','carniceria','peluqueria','bar','ropa','libreria'];const TEXAT=['@t0','@t1','@t2','@mu','@mn','@mcA','@mcB','@hp','@cf','@em','@bw0','@bw1','@bw2','@bd','@bdr','@sot','@bl0','@bl1','@bl2','@bl3','@gr0','@gr1','@wx','@bh','@ck0','@ck1','@gf0','@gf1','@gf2','@gf3','@cp','@ce','@cg','@hq'].concat(SHOPN.map((n,i)=>'@s'+i));const STREET_TEX=[];function streetSignTex(name){const k=STREET_TEX.findIndex(s=>s.n===name);if(k>=0)return STREET_TEX[k];if(name[0]==='@'&&name[1]!=='t'){const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return[c,c.getContext('2d')]};let c,g;const COL=['#1d5fb0','#f08a3a','#54b24a','#e0457b','#7a4fb0'];
+const SHOPN=['ALMACÉN','KIOSCO','FARMACIA','FERRETERÍA','PANADERÍA','CARNICERÍA','PELUQUERÍA','BAR','ROPA','LIBRERÍA'],SHOPK=['almacen','kiosco','farmacia','ferreteria','panaderia','carniceria','peluqueria','bar','ropa','libreria'];const TEXAT=['@t0','@t1','@t2','@t3','@t4','@mu','@mn','@mcA','@mcB','@hp','@cf','@em','@bw0','@bw1','@bw2','@bd','@bdr','@sot','@bl0','@bl1','@bl2','@bl3','@gr0','@gr1','@wx','@bh','@ck0','@ck1','@gf0','@gf1','@gf2','@gf3','@cp','@ce','@cg','@hq'].concat(SHOPN.map((n,i)=>'@s'+i));const STREET_TEX=[];function streetSignTex(name){const k=STREET_TEX.findIndex(s=>s.n===name);if(k>=0)return STREET_TEX[k];if(name[0]==='@'&&name[1]!=='t'){const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return[c,c.getContext('2d')]};let c,g;const COL=['#1d5fb0','#f08a3a','#54b24a','#e0457b','#7a4fb0'];
   if(name==='@mu'){[c,g]=mk(1400,130);g.fillStyle='#1659a8';g.fillRect(0,0,1400,130);g.fillStyle='#fff';g.beginPath();g.moveTo(70,20);g.lineTo(120,20);g.lineTo(120,70);g.quadraticCurveTo(95,115,70,70);g.closePath();g.fill();g.fillStyle='#1659a8';g.fillRect(84,32,22,6);g.font='bold 78px system-ui,sans-serif';g.textBaseline='middle';g.textAlign='left';g.fillStyle='#fff';g.fillText('Municipalidad de Neuquén',160,70)}
   else if(name==='@cp'){[c,g]=mk(1200,260);g.fillStyle='#1d1a16';g.fillRect(0,0,1200,260);g.strokeStyle='#e8a33a';g.lineWidth=8;g.strokeRect(12,12,1176,236);g.fillStyle='#e8c27a';g.fillRect(70,58,16,130);g.fillRect(34,98,88,16);g.font='bold 100px system-ui,sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText('CAPILLA DEL POZO',150,100);g.font='600 54px system-ui,sans-serif';g.fillStyle='#f2efe6';g.fillText('REFUGIO · COMERCIO · PEDIDOS',150,190)}
   else if(name==='@ce'||name==='@cg'){const e=name==='@ce';[c,g]=mk(1200,260);g.fillStyle=e?'#17335a':'#2a2118';g.fillRect(0,0,1200,260);g.strokeStyle=e?'#f2efe6':'#e8a33a';g.lineWidth=8;g.strokeRect(12,12,1176,236);g.fillStyle=e?'#f2efe6':'#e8c27a';g.font='bold 96px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(e?'ESCUELA Nº 3':'GALPÓN DEL OLEODUCTO',600,100);g.font='600 52px system-ui,sans-serif';g.fillText('REFUGIO · COMERCIO · PEDIDOS',600,190)}
@@ -594,9 +594,26 @@ const SHOPN=['ALMACÉN','KIOSCO','FARMACIA','FERRETERÍA','PANADERÍA','CARNICER
   else{[c,g]=mk(64,64)}
   const e={n:name,cnv:c};STREET_TEX.push(e);return e}
 if(name[0]==='@'){const v=+name.slice(2),c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');let h=9157+v*7919;const q=()=>{h=(h*1664525+1013904223)>>>0;return h/4294967296};
-  const pal=[['#2a5a26','#35702f','#418238','#4f9444','#62a653'],['#355f24','#44752c','#538835','#669c40','#7db04e'],['#245a35','#2f7041','#3b844c','#499a59','#5cae68']][v%3];
-  const shape=(x,y)=>{const dx=(x-256)/232,dy=(y-262)/208;return dx*dx+dy*dy<1.0+.18*Math.sin(Math.atan2(dy,dx)*5+v)};
-  for(let pass=0;pass<5;pass++){const n=pass===0?900:1100;for(let i=0;i<n;i++){const x=40+q()*432,y=36+q()*440;if(!shape(x,y))continue;const lit=Math.min(4,Math.max(0,Math.floor((1-(y-36)/440)*3.2+q()*1.6+(pass-2)*.35)));g.fillStyle=pal[lit];g.beginPath();g.ellipse(x,y,7+q()*11,5+q()*9,q()*3.14,0,6.3);g.fill()}}
+  if(v===4){ // ramas secas y quemadas (sin hojas)
+   const br=(x,y,a,L,w,d)=>{if(d>6||L<6)return;const ex=x+Math.cos(a)*L,ey=y-Math.sin(a)*L;g.strokeStyle=d<2?'#2a1f17':d<4?'#33271d':'#3d3024';g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x,y);g.quadraticCurveTo((x+ex)/2+(q()-.5)*L*.3,(y+ey)/2,ex,ey);g.stroke();
+    const n=2+(q()<.4?1:0);for(let k=0;k<n;k++)br(ex,ey,a+(q()-.5)*1.3,L*(.62+q()*.15),w*.62,d+1)};
+   br(256,512,1.5708,150,22,0);br(256,420,2.2,90,10,2);br(256,400,.9,90,10,2);
+   for(let k=0;k<40;k++){g.fillStyle='rgba(20,15,10,.8)';g.fillRect(q()*512,q()*300,2,2)}
+   const e={n:name,cnv:c};STREET_TEX.push(e);return e}
+  // hojas: grises de ceniza y polvo, más secas que antes (Patagonia, después de la explosión)
+  const pal=[['#1d3a1b','#2b4f26','#3b6431','#4e773d','#6a8c4f'],['#2a3d1a','#3a5222','#4c662c','#617a38','#7e9149'],['#1f3a2c','#2b4e38','#3a6344','#4d7752','#688e63'],['#2c3f17','#3e561f','#536d29','#6b8434','#8b9c45']][v%4];
+  const tall=v===3;
+  const blob=[];const nb=tall?8:7;for(let k=0;k<nb;k++)blob.push([tall?150+q()*212:110+q()*292,tall?40+k*58+q()*20:120+q()*260,tall?85+q()*40:70+q()*60]);
+  const inside=(x,y)=>{for(const[bx,by,br]of blob){const dx=x-bx,dy=y-by;if(dx*dx+dy*dy<br*br)return 1-Math.sqrt(dx*dx+dy*dy)/br}return-1};
+  // fondo oscuro del interior de la copa
+  for(let i=0;i<2600;i++){const x=q()*512,y=q()*512,d=inside(x,y);if(d<.25)continue;g.fillStyle=pal[0];g.beginPath();g.ellipse(x,y,9+q()*8,7+q()*6,q()*3.14,0,6.3);g.fill()}
+  // hojas sueltas: puntiagudas, más claras arriba y en el borde de cada mazo
+  for(let i=0;i<5200;i++){const x=q()*512,y=q()*512,d=inside(x,y);if(d<0)continue;const lit=Math.min(4,Math.max(1,Math.floor((1-y/512)*2.2+(1-d)*1.6+q()*1.4)));
+   g.fillStyle=pal[lit];g.save();g.translate(x,y);g.rotate(q()*6.28);const L=5+q()*7;g.beginPath();g.moveTo(-L,0);g.quadraticCurveTo(0,-L*.45,L,0);g.quadraticCurveTo(0,L*.45,-L,0);g.fill();g.restore()}
+  // ramitas que asoman
+  g.strokeStyle='#2b2118';g.lineWidth=2;for(let k=0;k<14;k++){const x=120+q()*272,y=200+q()*260;g.beginPath();g.moveTo(x,y);g.lineTo(x+(q()-.5)*40,y+20+q()*30);g.stroke()}
+  // polvo/ceniza encima
+  for(let i=0;i<500;i++){const x=q()*512,y=q()*512;if(inside(x,y)<0)continue;g.fillStyle='rgba(150,140,120,'+(.15+q()*.2)+')';g.fillRect(x,y,2+q()*3,2+q()*2)}
   const e={n:name,cnv:c};STREET_TEX.push(e);return e}
 const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');
  g.fillStyle='#1d4f9c';g.fillRect(0,0,512,128);g.fillStyle='#fff';g.fillRect(6,6,500,116);g.fillStyle='#1d4f9c';g.fillRect(12,12,488,104);g.fillStyle='#fff';g.font='bold 54px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';
