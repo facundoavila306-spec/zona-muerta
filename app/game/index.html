@@ -2636,7 +2636,7 @@ function nextLevel(){if(LVLN>=5){S='win';document.exitPointerLock&&document.exit
 // ====================================================== BUCLE
 let last=performance.now(),fpsA=0,fpsN=0,fpsT=0,hudN=0,stepT=0,hbT=0;
 function update(dt){
- if(CARD){return}time+=dt;if(P.face>0){P.face-=dt;P.hp-=4*dt;P.faceT=(P.faceT||0)+dt;if(P.hp<=0){P.hp=0;P.face=0}const fv=document.getElementById('face');if(fv){fv.style.opacity=Math.min(1,P.face*2);fv.style.transform='scale('+(1+Math.sin(P.faceT*9)*.03)+') rotate('+(Math.sin(P.faceT*5)*2)+'deg)'}}else{const fv=document.getElementById('face');if(fv&&fv.style.opacity!=='0')fv.style.opacity=0}if(typeof refugeUpdate==='function')refugeUpdate(dt);if(typeof needsUpdate==='function'&&LVL&&LVL.city)needsUpdate(dt);P.t+=dt;
+ if(CARD){return}if(P.hitstop>0){P.hitstop-=dt;dt*=.12}time+=dt;if(P.face>0){P.face-=dt;P.hp-=4*dt;P.faceT=(P.faceT||0)+dt;if(P.hp<=0){P.hp=0;P.face=0}const fv=document.getElementById('face');if(fv){fv.style.opacity=Math.min(1,P.face*2);fv.style.transform='scale('+(1+Math.sin(P.faceT*9)*.03)+') rotate('+(Math.sin(P.faceT*5)*2)+'deg)'}}else{const fv=document.getElementById('face');if(fv&&fv.style.opacity!=='0')fv.style.opacity=0}if(typeof refugeUpdate==='function')refugeUpdate(dt);if(typeof needsUpdate==='function'&&LVL&&LVL.city)needsUpdate(dt);P.t+=dt;
  // puertas y compuerta
  for(const d of DOORS){if(d.mev&&d.mev.ref&&d.tgt===1&&Math.hypot((d.cx+.5)*CS-P.x,(d.cy+.5)*CS-P.z)>5){d.tgt=0;if(d.draw)AU.door&&AU.door((d.cx+.5)*CS,(d.cy+.5)*CS)}d.open=clamp(d.open+(d.tgt-d.open)*Math.min(1,dt*2.2)+Math.sign(d.tgt-d.open)*dt*.35,0,1)}
  gate.open=clamp(gate.open+Math.sign(gate.tgt-gate.open)*dt*.33,0,1);
@@ -2703,7 +2703,8 @@ let WCOMBO=0,WI=4,WANIM='idle',WAT=0,WCD=0,WRL=0,WSWT=0;   // arma actual (índi
 const WMODELS={};function wModel(n){if(WMODELS[n])return WMODELS[n];GEN.setQ(GEN.QS.hi);const w=GEN.WDEFS[n]();w.J.root.t=[0,0,0];w.J.root.rest=[0,0,0];w.tpl=charTplObj(w);GEN.setQ(PS1);return WMODELS[n]=w}
 const FIRES=[],FLARES=[],THROWS=[];
 function wCur(){return WORDER[WI]}
-function wSel(i){if(i===WI||WRL>0)return;P.scope=0;WI=i;WANIM='idle';WAT=0;WCD=.3;AU.click();msg(WNAME[wCur()],1)}
+function wAllowed(i){const n=WORDER[i],d=WDAT[n],s=WS[n];if(d.k==='melee')return!P.melee||n===P.melee;if(d.k==='gun')return s.res===Infinity||s.mag+s.res>0;return s.res>0}
+function wSel(i){if(i===WI||WRL>0)return;if(!wAllowed(i)){AU.click();msg(WDAT[WORDER[i]].k==='melee'?'No tenés esa arma':'Sin munición para '+WNAME[WORDER[i]],1.2);return}P.scope=0;WI=i;WANIM='idle';WAT=0;WCD=.3;AU.click();msg(WNAME[wCur()],1)}
 function wReload(){const n=wCur(),d=WDAT[n],s=WS[n];if(d.k!=='gun'||WRL>0||s.mag>=d.mag||s.res<=0)return;P.scope=0;WRL=d.rl*(P.who==='Maxi'?.75:1);WANIM='reload';WAT=0;AU.reload(0);
  setTimeout(()=>AU.reload(1),d.rl*450);setTimeout(()=>AU.reload(2),d.rl*800)}
 function shotRay(d,dmgMul){const f=fwd(),sp=(P.who==='Facundo'?.8:1)*d.spread+(P.scope?.15:1)*(P.moving*.01+P.heat*.012);
@@ -2724,12 +2725,12 @@ function wFire(){const n=wCur(),d=WDAT[n],s=WS[n];if(WCD>0||WRL>0||P.hp<=0||P.sp
   const k=d.rec*(.8+R()*.5);P.pitch+=k;P.rk+=k;P.yaw+=(R()-.5)*d.rec*.6;P.shake=Math.max(P.shake,.1+d.rec*4);
   if(s.mag<=0&&s.res>0)setTimeout(wReload,250)}
  else if(d.k==='melee'){WCD=d.rate;WANIM='swing';WAT=0;WSWT=d.sw*.3;AU.shove();
-  const f=fwd();let hit=false,nh=0;P.pvx+=Math.sin(P.yaw)*2.2;P.pvz+=Math.cos(P.yaw)*2.2;WCOMBO=(WCOMBO+1)%2;
+  const f=fwd();let hit=false,nh=0;P.pvx+=Math.sin(P.yaw)*2.2;P.pvz+=Math.cos(P.yaw)*2.2;WCOMBO=(WCOMBO+1)%2;setTimeout(()=>{if(S!=='play')return;let hit=false,nh=0;
   {const sg=WCOMBO?1:-1,ey=eyeY(),rxv=-Math.cos(P.yaw),rzv=Math.sin(P.yaw);setTimeout(()=>{for(let k=0;k<=14;k++){const tt=k/14*2-1,lat=sg*tt*1.15,ht=-tt*.5,fd=1.25+(1-tt*tt)*.45;
     parts.push({x:P.x+Math.sin(P.yaw)*fd+rxv*lat,y:ey-.15+ht,z:P.z+Math.cos(P.yaw)*fd+rzv*lat,vx:rxv*sg*2.5,vy:-.8,vz:rzv*sg*2.5,life:.12+k*.006,sz:.03,c:[1,.95,.85],e:1.4,g:0})}},d.sw*120)}for(const z of zs){if(z.state==='dead'||z.hidden)continue;const dx=z.x-P.x,dz=z.z-P.z,dd=Math.hypot(dx,dz);if(dd>d.reach)continue;
    const a=Math.atan2(dx,dz)-P.yaw;if(Math.abs(((a+9.4247)%6.2832)-3.1416)>d.arc)continue;
-   const head=P.pitch>.12&&dd<1.6;hurtZ(z,d.dmg*(P.who==='Aurelio'?1.3:1)*(head?1.8:1)*(z.tank?.6:1),head,dx/dd,dz/dd,z.x-dx/dd*.3,1.2,z.z-dz/dd*.3);if(!z.tank){z.stag=Math.max(z.stag,.5);const kb=(1.6-dd/d.reach*.6)*(n==='Hacha'?4.5:6);z.vx=dx/dd*kb;z.vz=dz/dd*kb}hit=true;nh++}
-  if(hit){P.shake=Math.max(P.shake,.2+Math.min(nh,4)*.1);P.kick=Math.max(P.kick,.5)}noise(P.x,P.z,8)}
+   const head=P.pitch>.12&&dd<1.6;hurtZ(z,d.dmg*(P.who==='Aurelio'?1.3:1)*(head?1.8:1)*(z.tank?.6:1),head,dx/dd,dz/dd,z.x-dx/dd*.3,1.2,z.z-dz/dd*.3);if(!z.tank){z.stag=Math.max(z.stag,.5);const kb=(1.6-dd/d.reach*.6)*(n==='Hacha'?4.5:6);z.vx=dx/dd*kb;z.vz=dz/dd*kb}hit=true;nh++;z.hit=.25;AU.splat&&AU.splat(z.x,z.z,1.2);for(let q=0;q<12;q++)parts.push({x:z.x-dx/dd*.25,y:1.1+R()*.5,z:z.z-dz/dd*.25,vx:dx/dd*2+(R()-.5)*3,vy:1+R()*2.5,vz:dz/dd*2+(R()-.5)*3,life:.5+R()*.3,sz:.035,c:[.55,.04,.03],e:0,g:1})}
+  if(hit){P.shake=Math.max(P.shake,.35+Math.min(nh,4)*.12);P.kick=Math.max(P.kick,.8);P.hitstop=.07;AU.noise(.09,'lowpass',500,120,.9,0,.02);WSWT=d.sw*.15}},d.sw*170);noise(P.x,P.z,8)}
  else if(d.k==='throw'){if(s.res<=0){AU.click();WCD=.4;return}s.res--;WCD=d.rate;WANIM='use';WAT=0;const f=fwd();
   THROWS.push({kind:n,x:P.x+f[0]*.5,y:eyeY()-.1,z:P.z+f[2]*.5,vx:f[0]*11+P.pvx,vy:f[1]*11+3.5,vz:f[2]*11+P.pvz,t:0,spin:R()*6});AU.noise(.12,'bandpass',600,1800,.25,0,.1)}}
 function throwsUpdate(dt){zFireUpdate(dt);if(P.poison>0&&P.hp>0){P.poison-=dt;P.hp-=3.2*dt;P.regen=Math.max(P.regen||0,2);if(P.hp<=0)hurtP(1,P.x,P.z)}{const pv=document.getElementById('pois');if(pv)pv.style.opacity=P.poison>0?Math.min(.75,P.poison*.22+.15*Math.sin(time*6)+.15):0}
@@ -2785,7 +2786,7 @@ function wHud(){const n=wCur(),d=WDAT[n],s=WS[n];const am=$('am'),ar=$('ar');
  $('wname').textContent=WNAME[n]+'  ·  '+(WI+1)}
 document.addEventListener('keydown',e=>{if(S!=='play')return;const c=e.code;
  for(let i=0;i<WORDER.length;i++){const k=WDAT[WORDER[i]].key;if((k.length===1&&c==='Digit'+k)||c===k){wSel(i);return}}});
-document.addEventListener('wheel',e=>{if(S!=='play')return;wSel((WI+(e.deltaY>0?1:WORDER.length-1))%WORDER.length)});
+document.addEventListener('wheel',e=>{if(S!=='play')return;let i=WI;for(let k=0;k<WORDER.length;k++){i=(i+(e.deltaY>0?1:WORDER.length-1))%WORDER.length;if(wAllowed(i))break}wSel(i)});
 (()=>{const w=document.createElement('div');w.id='wname';w.style.cssText='position:absolute;right:28px;bottom:78px;font-size:13px;letter-spacing:.08em;opacity:.8;text-shadow:0 2px 4px #000';$('hud').appendChild(w)})();
 // ---- v24.8: zombis prendidos fuego (corren ardiendo, contagian, quedan humeando)
 function zFireUpdate(dt){for(const z of zs){if(!(z.fireT>0))continue;z.fireT-=dt;const alive=z.state!=='dead';const d=Math.hypot(z.x-P.x,z.z-P.z);
@@ -3042,10 +3043,10 @@ function mercSave(){return MERCS.map(m=>[m.st==='dead'||m.st==='gone'?0:1,Math.r
 function mercLoad(a){if(!a)return;a.forEach((v,i)=>{const m=MERCS[i];if(!m)return;if(!v[0]){m.st='gone'}else{m.st='base';m.x=m.spot[0];m.z=m.spot[1];m.hp=v[1]||m.d.hp;m.trust=v[2]||0}});COMPS.length=0}
 
 // ---------- v26.3 protagonistas jugables: elegís uno; los otros tres esperan en la Capilla hasta que entren jugadores
-const PROTAS={Facundo:{w:'Revolver',wi:1,perk:'Puntería (dispersión -20%)'},Alma:{w:'Pistola',wi:0,perk:'Resistencia (hambre y sed bajan 25% más lento)'},Aurelio:{w:'Stillson',wi:6,perk:'Fuerza (cuerpo a cuerpo +30%)'},Maxi:{w:'Fusil',wi:4,perk:'Manos rápidas (recarga 25% más rápida)'}};
+const PROTAS={Facundo:{w:'Hacha',wi:0,perk:'Puntería (dispersión -20%)'},Alma:{w:'Cano',wi:0,perk:'Resistencia (hambre y sed bajan 25% más lento)'},Aurelio:{w:'Stillson',wi:0,perk:'Fuerza (cuerpo a cuerpo +30%)'},Maxi:{w:'Cano',wi:0,perk:'Manos rápidas (recarga 25% más rápida)'}};
 window.PROTA_INFO={Facundo:'puntería',Alma:'resistencia',Aurelio:'fuerza',Maxi:'recarga rápida'};
 const PROTS=[];
-function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;WI=w.wi;msg('Jugás como '+P.who+'. '+w.perk,5)}
+function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;P.melee=w.w;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&n!=='Pistola'){q.mag=0;q.res=0}if(d.k==='throw')q.res=0}WS.Pistola.mag=WDAT.Pistola.mag;WI=w.wi;msg('Jugás como '+P.who+'. Pistola y '+WNAME[w.w]+'. '+w.perk,6)}
 function protaPlace(){PROTS.length=0;const RF=(CITY.refuges||[])[0];if(!RF)return;let k=0;for(const n of Object.keys(PROTAS)){if(n===(P.who||'Facundo'))continue;
  let c;try{c=GEN.armedChar(n,PROTAS[n].w)}catch(e){continue}c.tpl=charTplObj(c);c.wp.tpl=charTplObj(c.wp);
  PROTS.push({n,ch:c,x:RF.x+1.5+k*2.2,z:RF.z+3.6,yaw:Math.PI,t:R()*5});k++}}
@@ -3218,12 +3219,12 @@ const ZM=(()=>{
  function resume(){hide();S='play';apply();lock()}
  function toMenu(){S='menu';document.exitPointerLock&&document.exitPointerLock();show('main')}
  function save(){if(!LVL||!LVL.city){render('Solo se puede guardar en la ciudad');return}
-  const d={v:1,date:Date.now(),P:{x:P.x,z:P.z,y:P.y,yaw:P.yaw,hp:P.hp,kills:P.kills,chapas:P.chapas|0,hunger:P.hunger??100,thirst:P.thirst??100,who:P.who||'Facundo'},WS:JSON.parse(JSON.stringify(WS,(k,v)=>v===Infinity?'inf':v)),WI,DAY:DAY.t,
+  const d={v:1,date:Date.now(),P:{x:P.x,z:P.z,y:P.y,yaw:P.yaw,hp:P.hp,kills:P.kills,chapas:P.chapas|0,hunger:P.hunger??100,thirst:P.thirst??100,who:P.who||'Facundo',melee:P.melee||''},WS:JSON.parse(JSON.stringify(WS,(k,v)=>v===Infinity?'inf':v)),WI,DAY:DAY.t,
    M:MISSIONS.map(m=>[m.done?1:0,m.got?1:0,m.rej||0]),MERC:(typeof mercSave==='function'?mercSave():null),MI,MDONE};
   try{localStorage.setItem(SK,JSON.stringify(d));render('Partida guardada')}catch(e){render('No se pudo guardar')}}
  function load(){const d=getSave();if(!d){render('No hay partida guardada');return}
   hide();S='menu';start();apply();
-  Object.assign(P,{x:d.P.x,z:d.P.z,y:d.P.y||0,vy:0,yaw:d.P.yaw,pitch:0,hp:d.P.hp,kills:d.P.kills||0,chapas:d.P.chapas||0,hunger:d.P.hunger??100,thirst:d.P.thirst??100,who:d.P.who||'Facundo'});if(typeof protaPlace==='function')protaPlace();
+  Object.assign(P,{x:d.P.x,z:d.P.z,y:d.P.y||0,vy:0,yaw:d.P.yaw,pitch:0,hp:d.P.hp,kills:d.P.kills||0,chapas:d.P.chapas||0,hunger:d.P.hunger??100,thirst:d.P.thirst??100,who:d.P.who||'Facundo',melee:d.P.melee||''});if(typeof protaPlace==='function')protaPlace();
   for(const n in d.WS)if(WS[n])for(const k in d.WS[n])WS[n][k]=d.WS[n][k]==='inf'?Infinity:d.WS[n][k];if(d.WI!==undefined)WI=d.WI;DAY.t=d.DAY;
   for(const m of MISSIONS)if(m.pick){const j=PICKS.indexOf(m.pick);if(j>=0)PICKS.splice(j,1);m.pick=null}
   (d.M||[]).forEach((a,i)=>{const m=MISSIONS[i];if(!m)return;m.done=!!a[0];m.got=!!a[1]&&!a[0];m.rej=a[2]||0});
