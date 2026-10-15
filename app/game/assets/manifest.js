@@ -31,5 +31,20 @@ const ASSETS={tex:{
   "p_pallet": {f:"tex/props/pallet.png", size:1, cut:1},
   "p_caja_basura": {f:"tex/props/caja_basura.png", size:1, cut:1},
   "p_pila": {f:"tex/props/pila.png", size:1, cut:1},
-  "p_dispersa": {f:"tex/props/dispersa.png", size:1, cut:1}
+  "p_dispersa": {f:"tex/props/dispersa.png", size:1, cut:1},
+  "t_copa": {f:"tex/trees/t_copa.png", size:1, cut:1},
+  "t_arbusto": {f:"tex/trees/t_arbusto.png", size:1, cut:1},
+  "t_seco": {f:"tex/trees/t_seco.png", size:1, cut:1},
+  "t_alamo_a": {f:"tex/trees/t_alamo_a.png", size:1, cut:1},
+  "t_alamo_b": {f:"tex/trees/t_alamo_b.png", size:1, cut:1},
+  "corteza": {f:"tex/trees/corteza.jpg", size:1.2},
+  "corteza_q": {f:"tex/trees/corteza_q.jpg", size:1.2},
+  "w_ladrillo": {f:"tex/walls/ladrillo.jpg", size:2.4},
+  "w_celeste": {f:"tex/walls/celeste.jpg", size:3},
+  "w_rosado": {f:"tex/walls/rosado.jpg", size:3},
+  "w_hormigon": {f:"tex/walls/hormigon.jpg", size:3},
+  "w_grafiti": {f:"tex/walls/grafiti.jpg", size:3},
+  "w_chapa": {f:"tex/walls/chapa.jpg", size:2.4},
+  "w_ceramica": {f:"tex/walls/ceramica.jpg", size:2.4},
+  "w_piedra": {f:"tex/walls/piedra.jpg", size:3}
 }};
