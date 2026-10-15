@@ -1,6 +1,6 @@
 extends Node3D
 # Zona Muerta · Godot. Orquesta ciudad, luces, jugador, compañeros, criaturas, refugios, sonido y menús.
-const VERSION := "g1.0"
+const VERSION := "g1.1"
 var player: Node3D
 var creatures: Node3D
 var companions: Node3D

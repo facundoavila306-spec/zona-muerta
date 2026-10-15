@@ -4,11 +4,15 @@ config_version=5
 [application]
 config/name="Zona Muerta"
 run/main_scene="res://main.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+config/features=PackedStringArray("4.3", "GL Compatibility")
 boot_splash/bg_color=Color(0.02, 0.025, 0.035, 1)
 
 [autoload]
 GS="*res://gs.gd"
+
+[debug]
+file_logging/enable_file_logging=true
+file_logging/enable_file_logging.pc=true
 
 [display]
 window/size/viewport_width=1280
@@ -25,7 +29,7 @@ izq={"deadzone":0.5,"events":[{"_type":"key","keycode":65}]}
 der={"deadzone":0.5,"events":[{"_type":"key","keycode":68}]}
 
 [rendering]
-renderer/rendering_method="forward_plus"
+renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 rendering_device/fallback_to_opengl3=true
 textures/vram_compression/import_etc2_astc=true
