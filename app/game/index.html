@@ -1960,6 +1960,7 @@ human=function(name,o){
   if(CRE){const s=CRE.s;o=Object.assign({},o);
     o.skin=mixC(C(o.skin),ASH,.3+.6*s);o.vein=Math.min(1,(o.vein||0)+.2+.35*s);o.dirt=Math.max(o.dirt||0,.2+.2*s);
     o.arm=(o.arm||1)*(1+.28*s);o.armR=(o.armR||1)*(1+.1*s);
+    const rag=(g)=>g?Object.assign({},g,{c:mixC(C(g.c),OIL,.45+.5*s),tear:Math.max(g.tear||0,.4+.5*s),dirt:.7,rough:.95,spec:.02}):g;o.shirt=rag(o.shirt);o.pants=rag(o.pants);if(o.hair)o.hair=null;
     o.face=Object.assign({},o.face,{eye:'#ffa322',white:'#d2c28a',glow:.9+.9*s,teeth:true,mouth:s>.5?'wide':'open',eyeBlood:.3});
   }
   return _human0(name,o)};
@@ -1988,7 +1989,7 @@ function creat(ch,s,rs){
   if(s>.8)for(const sd of[1,-1])ch.part('head',ell(.009,.009,.005,3,5),glow,at(sd*.035,.105,.1));
   if(ch.info)ch.info=Object.assign({},ch.info,{nombre:(ch.info.nombre||'').replace(/^Infectad[oa]/,'Nuzluz')});
   return ch}
-const NUZ_S=[.3,.6,.95];
+const NUZ_S=[.78,.9,1];
 for(const nm of['Vecino','Mujer','Obrero','Policia','Militar','Bombero','Pibe','Piba','Paciente']){const base=DEFS[nm];if(!base)continue;DEFS['H_'+nm]=function(rs){CRE=null;return base(rs||0)};
   DEFS[nm]=function(rs){rs=rs||0;const s=NUZ_S[rs%3];CRE={s};let ch;try{ch=base(rs)}finally{CRE=null}return creat(ch,s,rs)}}
 
@@ -2361,6 +2362,7 @@ function poseZ(z,dt){const ch=zChar(z),J=ch.J,k=z.sc;const dead=z.state==='dead'
  else{ch.at+=dt;t=ch.at}
  GEN.pose(ch,anim,t);
  const quad=ch.gait&&ch.gait.quad;
+ if(!quad&&!z.sp&&!z.tank&&anim!=='act'){const k=.75+.25*Math.sin(z.id*3.1);J.spine.r[0]+=.5*k;J.chest.r[0]+=.3*k;J.head.r[0]-=.55*k;J.shL.r[0]-=.7*k;J.shR.r[0]-=.7*k;J.shL.r[2]+=.25*k;J.shR.r[2]-=.25*k;J.elL.r[0]-=.5*k;J.elR.r[0]-=.5*k;J.hipL.r[0]+=.25*k;J.hipR.r[0]+=.25*k;J.knL.r[0]-=.45*k;J.knR.r[0]-=.45*k;if(J.root.p)J.root.p[1]-=.1*k}
  if(stag&&!quad){const q=Math.min(1,z.stag/.5);J.chest.r[0]-=.6*q;J.spine.r[0]-=.35*q;J.head.r[0]-=.5*q;J.shL.r[0]+=.9*q;J.shR.r[0]+=.9*q;J.root.r[2]+=Math.sin(z.stag*30)*.12*q}
  if(!quad&&chase&&anim!=='act'){const q=sp>3?1.6:1;J.spine.r[0]+=.22*q;J.chest.r[1]+=Math.sin(ch.at*5.1)*.25*q;J.chest.r[2]+=Math.sin(ch.at*2.6)*.14;J.head.r[2]+=Math.sin(ch.at*3.3)*.28;J.head.r[0]+=.18;
   J.shL.r[2]+=Math.sin(ch.at*4)*.22;J.shR.r[0]-=.3+Math.sin(ch.at*3)*.28;J.shL.r[0]-=.2+Math.sin(ch.at*3.4+1)*.28;J.elL.r[0]-=.35;J.elR.r[0]-=.45}
@@ -2442,7 +2444,7 @@ function mkZ(x,z,state,type){const tank=type==='tank'||type==='Hinchado';
  const z0={id:++zid,tank,x,z,yaw:R()*6.28,vx:0,vz:0,hp:tank?2600:42+R()*20,state,t:R()*6,sc:tank?1.15:.93+R()*.14,r:tank?.62:.3,
   spd:tank?5.0:3.4+R()*2.4,spdNow:0,atk:0,atkCd:0,stag:0,deadT:0,noHead:false,fall:R()<.5?-1:1,wT:R()*3,wx:x,wz:z,gT:2+R()*7,hit:0,
   skin:tank?[.52,.58,.5]:SKIN[(R()*SKIN.length)|0],shirt:tank?[.25,.2,.2]:SHIRT[(R()*SHIRT.length)|0],pants:tank?[.12,.12,.14]:PANTS[(R()*PANTS.length)|0],limp:R()<.25};
- z0.hpMax=z0.hp;if(tank){z0.sp='Hinchado';z0.r=.44}else if(type&&SPDAT[type])spInit(z0,type);zs.push(z0);return z0}
+ z0.hpMax=z0.hp;if(tank){z0.sp='Hinchado';z0.r=.44}else if(type&&SPDAT[type])spInit(z0,type);else if(!type){const r=R();const mix=r<.4?null:r<.66?'Garrafero':r<.84?'Topo':r<.94?'Polilla':'Nakru';if(mix){spInit(z0,mix);z0.weak=true;z0.hp=z0.hpMax=Math.round(SPDAT[mix].hp*.3);z0.dmg=Math.round(SPDAT[mix].dmg*.6)}}zs.push(z0);return z0}
 function wake(z,loud){if(z.state!=='idle')return;z.state='chase';z.gT=1+R();if(loud!==false)AU.groan(z.x,z.z,true);
  for(const o of zs)if(o!==z&&o.state==='idle'&&Math.hypot(o.x-z.x,o.z-z.z)<9&&R()<.6)o.state='chase'}
 function noise(x,z,rad){for(const q of zs)if(q.state==='idle'&&Math.hypot(q.x-x,q.z-z)<rad&&R()<.7)wake(q,false)}
@@ -2489,7 +2491,7 @@ function updZ(z,dt){
 function hurtP(dmg,sx,sz,knock){if(P.hp<=0)return;P.hp-=dmg;P.hurt=Math.min(1,P.hurt+.5+dmg/40);P.shake=Math.max(P.shake,.6);P.regen=6;AU.hurt();
  if(knock){const dx=P.x-sx,dz=P.z-sz,d=Math.hypot(dx,dz)||1;P.pvx=dx/d*9;P.pvz=dz/d*9}
  if(P.hp<=0){P.hp=0;S='dead';document.exitPointerLock&&document.exitPointerLock();showOv('TE INFECTARON','Bajas: '+P.kills+'  ·  R para reintentar',true)}}
-function killZ(z,head,dx,dz){if(z.sp==='Garrafero'&&!z.exploded){garrafaBoom(z);return}z.state='dead';z.hidden=false;z.deadT=0;z.noHead=head;P.kills++;P.chapas=(P.chapas|0)+(z.sp?8:1);AU.die(z.x,z.z);
+function killZ(z,head,dx,dz){if(z.sp==='Garrafero'&&!z.exploded){garrafaBoom(z);return}z.state='dead';z.hidden=false;z.deadT=0;z.noHead=head;P.kills++;P.chapas=(P.chapas|0)+(z.sp&&!z.weak?8:1);AU.die(z.x,z.z);
  addDecal(z.x+dx*.5,z.z+dz*.5,1.4+R()*.8,6);if(head){for(let i=0;i<14;i++)blood(z.x,1.6*z.sc,z.z,dx,dz,4);addDecal(z.x+dx*1.5,z.z+dz*1.5,1.1,6)}
  if(z.tank){msg('¡El Hinchado cayó!',3);AU.tone(60,40,.8,'sine',.5,0,.3)}}
 function blood(x,y,z,dx,dz,sp){parts.push({x,y,z,vx:dx*sp*R()+(R()-.5)*2,vy:1+R()*2.5,vz:dz*sp*R()+(R()-.5)*2,life:.8+R()*.8,sz:.04+R()*.05,c:[.35+R()*.2,.02,.02],e:0,g:1})}
@@ -2762,7 +2764,7 @@ const SPDAT={
  Nakru:    {hp:260,spd:1.3,dmg:22,reach:1.9,atk:.5,cd:1.3,r:.45},
  Hinchado: {hp:2600,spd:4.3,dmg:32,reach:1.7,atk:.75,cd:1.7,r:.44}};
 const SPNAME={Polilla:'Naloma',Acequiero:'Acequiero',Imitador:'Imitador',Topo:'Nica',Garrafero:'Nara',Nakru:'Nakru',Polvillo:'Polvillo',Hinchado:'Hinchado'};
-const LVL_SP=[['Polilla','Imitador'],['Topo','Polvillo','Nakru'],['Garrafero','Polilla','Acequiero'],['Imitador','Nakru','Garrafero'],['Polilla','Acequiero','Garrafero','Topo','Nakru','Polvillo']];
+const LVL_SP=[['Polilla','Topo'],['Garrafero','Nakru'],['Topo','Polilla','Garrafero'],['Nakru','Garrafero','Topo'],['Polilla','Garrafero','Topo','Nakru']];
 let spCd=40;
 function spInit(z,name){const d=SPDAT[name];z.sp=name;z.hp=z.hpMax=d.hp;z.spd=d.spd;z.dmg=d.dmg;z.reach=d.reach;z.atkT=d.atk;z.atkCdT=d.cd;z.r=d.r;z.cd=0;z.limp=false;
  if(name==='Topo'){z.jp={ph:'idle',t:0,cd:2+R()*3}}
@@ -2796,7 +2798,7 @@ function spUpdate(z,dt){const n=z.sp;const dx=P.x-z.x,dz=P.z-z.z,d=Math.hypot(dx
   return false}
  if(n==='Nakru'){const K=z.nk;K.t-=dt;
   if(K.ph==='under'){z.hidden=true;z.spdNow=0;if(K.t<=0){for(let k=0;k<30;k++){const a=R()*6.28,rr=3.5+R()*3.5,x=P.x+Math.cos(a)*rr,zz=P.z+Math.sin(a)*rr;if(!solidAt(CXo(x),CXo(zz))&&losClear(x,zz,P.x,P.z)){z.x=x;z.z=zz;break}}
-    K.ph='up';K.t=6+R()*2;K.em=0;z.hidden=false;z.yaw=Math.atan2(P.x-z.x,P.z-z.z);z.state='chase';msg('El suelo tiembla...',2);AU.noise(.6,'lowpass',500,80,.8*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.3);P.shake=Math.max(P.shake,.5);
+    K.ph='up';K.t=6+R()*2;K.em=0;z.hidden=false;z.yaw=Math.atan2(P.x-z.x,P.z-z.z);z.state='chase';if(!z.weak)msg('El suelo tiembla...',2);AU.noise(.6,'lowpass',500,80,.8*AU.sp(z.x,z.z).g,AU.sp(z.x,z.z).pan,.3);P.shake=Math.max(P.shake,.5);
     for(let k=0;k<30;k++)parts.push({x:z.x,y:.05,z:z.z,vx:(R()-.5)*4,vy:1+R()*3.5,vz:(R()-.5)*4,life:.5+R()*.6,sz:.05+R()*.06,c:[.4,.38,.32],e:0,g:1})}return true}
   if(K.ph==='up'){K.em=Math.min(1,K.em+dt*2.2);if(K.t<=0){K.ph='down'}return K.em<1}
   if(K.ph==='down'){K.em-=dt*2.2;z.spdNow=0;if(K.em<=0){K.em=0;K.ph='under';K.t=5+R()*4;z.hidden=true;for(let k=0;k<16;k++)parts.push({x:z.x,y:.05,z:z.z,vx:(R()-.5)*3,vy:1+R()*2,vz:(R()-.5)*3,life:.5,sz:.05,c:[.4,.38,.32],e:0,g:1})}return true}
@@ -2815,7 +2817,7 @@ function spawnSpecial(name){let made=0;for(let tries=0;tries<200&&!made;tries++)
   const f=FD[I(cx,cy)];if(f<8||f>34)continue;if(SAFE(cx,cy)&&EV.s===0)continue;
   const x=(cx+.5)*CS+(R()-.5)*1.2,z=(cy+.5)*CS+(R()-.5)*1.2;if(Math.hypot(x-P.x,z-P.z)<10||losClear(x,z,P.x,P.z))continue;
   const q=mkZ(x,z,name==='Imitador'?'idle':'chase',name);if(name!=='Imitador')q.yaw=Math.atan2(P.x-x,P.z-z);made++}return made}
-function spDirector(dt){spCd-=dt;if(spCd<=0&&zs.filter(z=>z.sp&&z.sp!=='Hinchado'&&z.state!=='dead').length<2){const list=LVL_SP[LVLN]||LVL_SP[0];spawnSpecial(list[(R()*list.length)|0]);spCd=55+R()*35}}
+function spDirector(dt){spCd-=dt;if(spCd<=0&&zs.filter(z=>z.sp&&!z.weak&&z.sp!=='Hinchado'&&z.state!=='dead').length<2){const list=LVL_SP[LVLN]||LVL_SP[0];spawnSpecial(list[(R()*list.length)|0]);spCd=55+R()*35}}
 
 // ====================================================== COMPAÑEROS: Alma, Aurelio y Maxi (siguen, pelean, hablan)
 const COMPDEF=[{n:'Alma',w:'Pistola',off:[1.3,-1.6],dmg:16,cd:.42,rng:13,col:'#e9b36a'},{n:'Aurelio',w:'Bombeo',off:[-1.4,-1.8],dmg:34,cd:.95,rng:9,col:'#8fc4ee'},{n:'Maxi',w:'Cano',off:[0,-2.6],dmg:40,cd:.7,rng:2.0,col:'#9fd98a'}];
