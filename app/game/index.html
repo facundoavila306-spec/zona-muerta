@@ -1339,6 +1339,7 @@ function pose(ch,anim,t){
   const J=ch.J,g=Object.assign({lean:0,armF:null,limp:0,speed:1,amp:1,cad:1,elb:.22,sway:0,head:0,crouch:0,tilt:0},ch.gait);
   for(const j of ch.js){j.r[0]=j.r[1]=j.r[2]=0;j.t[0]=j.rest[0];j.t[1]=j.rest[1];j.t[2]=j.rest[2]}
   const Rt=(n,x,y,z)=>{const r=J[n].r;r[0]+=x||0;r[1]+=y||0;r[2]+=z||0};
+  if(g.quad==='boar'){boarPose(ch,anim,t);ch.update();return}
   const zom=ch.zombie;
   const walking=anim==='walk'||anim==='run',run=anim==='run'?1:0;
   const ph=t*TAU*(run?1.5:.9)*g.speed*g.cad,amp=(run?.78:.44)*g.amp;
@@ -1902,6 +1903,135 @@ function Piba(rs){const R=rnd(940+rs*7);const ch=human('Piba',{h:.84,fem:true,w:
   return setZ(ch,{lean:.28,limp:.05,speed:1.2,amp:1.1,armF:-1.25,headTilt:1.2},{nombre:'Infectada · piba',rol:'Común',desc:'Ropa de colegio o de salida. Liviana y rápida.'})}
 Object.assign(DEFS,{Policia,Militar,Bombero,Pibe,Piba});
 
+// ====================================================== v25.1 · VACA MUERTA: Nuzluz (infectados que se transforman) y Nara (jabalí negro con bolsa de gas)
+const ASH=C('#6e6b5b'),ASHD=C('#3a382f'),BONE=C('#d6ccaa'),OIL=C('#0e0c0a'),AMBC=[1,.55,.12];
+const emA=(k)=>[2.6*k,1.3*k,.22*k];
+// ---- Nuzluz: mismas personas, cada vez más transformadas ----
+let CRE=null;
+const _human0=human;
+human=function(name,o){
+  if(CRE){const s=CRE.s;o=Object.assign({},o);
+    o.skin=mixC(C(o.skin),ASH,.3+.6*s);o.vein=Math.min(1,(o.vein||0)+.2+.35*s);o.dirt=Math.max(o.dirt||0,.2+.2*s);
+    o.arm=(o.arm||1)*(1+.28*s);o.armR=(o.armR||1)*(1+.1*s);
+    o.face=Object.assign({},o.face,{eye:'#ffa322',white:'#d2c28a',glow:.9+.9*s,teeth:true,mouth:s>.5?'wide':'open',eyeBlood:.3});
+  }
+  return _human0(name,o)};
+function creat(ch,s,rs){
+  const bone={c:BONE,tex:0,rough:.4,spec:.35,bump:.1,dirt:.1},glow={c:AMBC,tex:0,rough:.3,emis:emA(1),alpha:1};
+  const R=rnd(4400+rs*31+(ch.name.length*17));
+  // espinas de hueso en la espalda
+  const n=Math.floor(2+s*6);
+  for(let i=0;i<n;i++){const onChest=i<n*.6;const y=onChest?.04+i*.04:-.1+(i-n*.6)*.07;const jn=onChest?'chest':'spine';
+    const L=.05+.06*s+R()*.03;
+    ch.part(jn,merge([[tube([0,0,0],[0,L*.5,-L*.95],.02,.004)],[ell(.0075,.0075,.0075,3,5),at(0,L*.5,-L*.95)]]),bone,at((R()-.5)*.05,y+(onChest?0:0),-.1-(onChest?0:.0)));
+    ch.part(jn,ell(.009,.009,.009,3,5),glow,at((R()-.5)*.0,y+L*.5,-.1-L*.95))}
+  // grietas con brillo de petróleo
+  if(s>.25){const ncr=Math.floor(2+s*5);
+    for(let k=0;k<ncr;k++){const side=(R()<.5?1:-1),y=.02+R()*.22,z=R()<.5?.108:-.1,x=(R()-.5)*.17;
+      ch.part('chest',sbox(.0035,.025+R()*.04,.0025,.5),glow,at(x,y,z,0,0,(R()-.5)*1.2))}
+    for(const S of['L','R'])ch.part('sh'+S,sbox(.0035,.05,.0025,.5),glow,at(S==='L'?.04:-.04,-.12,.03,0,0,.4))}
+  // costillas a la vista
+  if(s>.55)for(let k=0;k<3;k++)ch.part('chest',tube([-.095,.05+k*.05,.112],[.095,.05+k*.05,.112],.0065,.0065),bone,mI());
+  // garras
+  for(const S of['L','R']){const L=.04+.08*s;
+    ch.part('wr'+S,merge([0,1,2,3].map(k=>[tube([(k-1.5)*.0215,-.135,.02],[(k-1.5)*.0215,-.135-L,.03],.008,.0015)])),bone,mI())}
+  // mandíbulas laterales (etapa avanzada)
+  if(s>.7)for(const sd of[1,-1])ch.part('head',tube([sd*.05,.0,.095],[sd*.085,-.07,.12],.01,.002),bone,mS(ch.hs||1,ch.hs||1,ch.hs||1));
+  // segundo par de ojos
+  if(s>.8)for(const sd of[1,-1])ch.part('head',ell(.009,.009,.005,3,5),glow,at(sd*.035,.105,.1));
+  if(ch.info)ch.info=Object.assign({},ch.info,{nombre:(ch.info.nombre||'').replace(/^Infectad[oa]/,'Nuzluz')});
+  return ch}
+const NUZ_S=[.3,.6,.95];
+for(const nm of['Vecino','Mujer','Obrero','Policia','Militar','Bombero','Pibe','Piba','Paciente']){const base=DEFS[nm];if(!base)continue;
+  DEFS[nm]=function(rs){rs=rs||0;const s=NUZ_S[rs%3];CRE={s};let ch;try{ch=base(rs)}finally{CRE=null}return creat(ch,s,rs)}}
+
+// ---- Nara: jabalí negro, flaco y musculoso, con bolsa de gas inflamable en el lomo ----
+function Nara(rs){
+  const ch=new Char('Nara',{h:1});ch.scale=1;
+  const hide=C('#15120f'),hideB=C('#271f19'),grz=C('#352a1c'),snc=C('#40282a'),dk=C('#070605');
+  const HP=(c,x)=>Object.assign({c,tex:0,rough:.8,spec:.1,dirt:.25,bump:.3},x||{});
+  const glow={c:AMBC,tex:0,rough:.3,emis:emA(1)},bone={c:BONE,tex:0,rough:.4,spec:.35,bump:.1};
+  ch.jt('root',null,[0,.82,0]);ch.jt('spine','root',[0,.02,.28]);ch.jt('chest','spine',[0,.04,.22]);
+  ch.jt('neck','chest',[0,.1,.34]);ch.jt('head','neck',[0,-.02,.18]);ch.jt('jaw','head',[0,-.1,.1]);
+  for(const [S,s] of[['L',1],['R',-1]]){
+    ch.jt('sh'+S,'chest',[s*.27,-.22,.12]);ch.jt('el'+S,'sh'+S,[0,-.3,0]);ch.jt('wr'+S,'el'+S,[0,-.3,0]);
+    ch.jt('hip'+S,'root',[s*.25,-.16,-.5]);ch.jt('kn'+S,'hip'+S,[0,-.3,0]);ch.jt('an'+S,'kn'+S,[0,-.32,0])}
+  ch.jt('tail','root',[0,.2,-.72]);ch.jt('sac','root',[0,.3,-.26]);
+  ch.H=1.0;
+  // cuerpo
+  ch.part('root',ell(.38,.36,.62,12,22),HP(hide),mI());
+  ch.part('root',ell(.36,.35,.38,10,18),HP(hide),at(0,0,-.42));
+  ch.part('root',ell(.33,.2,.6,8,16),HP(hideB),at(0,-.17,.05));
+  ch.part('spine',ell(.4,.4,.42,10,18),HP(hide),at(0,0,0));
+  ch.part('chest',ell(.44,.46,.42,12,22),HP(hide),at(0,0,.04));
+  ch.part('chest',ell(.34,.28,.34,10,18),HP(grz),at(0,.33,-.04));
+  for(const sd of[1,-1]){ch.part('chest',ell(.14,.24,.3,8,14),HP(hideB),at(sd*.3,-.08,0));
+    ch.part('root',ell(.13,.22,.28,8,14),HP(hideB),at(sd*.3,-.04,-.5));
+    ch.part('root',ell(.2,.12,.28,6,10),HP(dk,{rough:.6}),at(sd*.3,.12,-.1,0,0,sd*.3))}
+  // melena de cerdas
+  for(let i=0;i<11;i++){const u=i/10,z=.42-i*.1,y=.52-u*.12,h=.25-u*.1;
+    ch.part('spine',tube([0,y,z],[0,y+h,z-.14],.034,.004),HP(grz,{rough:.9,bump:.5}),mI());
+    for(const sd of[1,-1])ch.part('spine',tube([sd*.07,y-.03,z],[sd*.14,y-.03+h*.6,z-.1],.024,.004),HP(i%2?grz:hideB,{rough:.9}),mI())}
+  // cuello y cabeza
+  ch.part('neck',ell(.21,.2,.2,8,14),HP(hide),at(0,0,.08));
+  ch.part('head',ell(.21,.2,.27,10,18),HP(hide),at(0,0,.08));
+  ch.part('head',tube([0,-.04,.2],[0,-.1,.64],.125,.075),HP(hide),mI());
+  ch.part('head',ell(.085,.065,.03,6,10),HP(snc,{rough:.5,spec:.3}),at(0,-.1,.655));
+  for(const sd of[1,-1]){
+    ch.part('head',ell(.016,.014,.012,3,5),HP(dk),at(sd*.035,-.1,.678));
+    ch.part('head',ell(.2,.05,.1,5,10),HP(dk),at(0,.12,.12));
+    ch.part('head',ell(.03,.03,.02,4,6),HP(dk),at(sd*.12,.07,.16));
+    ch.part('head',ell(.018,.018,.018,4,6),glow,at(sd*.12,.07,.175));
+    ch.part('head',merge([[tube([sd*.1,-.1,.42],[sd*.2,-.06,.5],.032,.022)],[tube([sd*.2,-.06,.5],[sd*.225,.14,.52],.022,.004)]]),bone,mI());
+    ch.part('head',tube([sd*.07,-.1,.45],[sd*.085,-.02,.47],.016,.004),bone,mI());
+    ch.part('head',tube([sd*.13,.17,.0],[sd*.2,.38,-.08],.055,.01),HP(hide),mI())}
+  ch.part('jaw',tube([0,0,0],[0,-.03,.5],.075,.05),HP(dk),mI());
+  for(let k=0;k<5;k++)ch.part('jaw',tube([(k-2)*.025,.0,.38+k%2*.04],[(k-2)*.025,.05,.4+k%2*.04],.008,.002),bone,mI());
+  // patas
+  for(const [S,s] of[['L',1],['R',-1]]){
+    ch.part('sh'+S,tube([0,0,0],[0,-.3,0],.1,.066),HP(hide),mI());
+    ch.part('el'+S,tube([0,0,0],[0,-.3,0],.066,.045),HP(hideB),mI());
+    ch.part('wr'+S,merge([[sbox(.022,.04,.04,.5),at(-.022,-.03,.02)],[sbox(.022,.04,.04,.5),at(.022,-.03,.02)]]),HP(dk,{rough:.5,spec:.3}),mI());
+    ch.part('hip'+S,tube([0,0,0],[0,-.3,0],.115,.07),HP(hide),mI());
+    ch.part('kn'+S,tube([0,0,0],[0,-.32,0],.07,.046),HP(hideB),mI());
+    ch.part('an'+S,merge([[sbox(.022,.04,.04,.5),at(-.022,-.03,.02)],[sbox(.022,.04,.04,.5),at(.022,-.03,.02)]]),HP(dk,{rough:.5,spec:.3}),mI())}
+  ch.part('tail',merge([[tube([0,0,0],[0,-.2,-.06],.03,.012)],[ell(.03,.06,.03,4,6),at(0,-.26,-.07)]]),HP(grz),mI());
+  // grietas ámbar en los flancos
+  for(const sd of[1,-1])for(let k=0;k<3;k++)ch.part('root',sbox(.004,.07+k*.02,.003,.5),glow,at(sd*(.37-k*.01),.04+k*.05,-.2+k*.22,0,0,sd*.25));
+  // bolsa de gas
+  ch.part('sac',ell(.28,.05,.32,6,12),HP(dk,{rough:.6}),at(0,.02,0));
+  ch.part('sac',ell(.3,.27,.34,12,22),{c:C('#a8672c'),tex:0,rough:.35,spec:.5,alpha:.62,emis:[.55,.22,.04],bump:.05},at(0,.2,0));
+  ch.part('sac',ell(.2,.17,.24,8,14),{c:AMBC,tex:0,rough:.3,emis:[2.1,1.0,.2],alpha:.5},at(0,.2,0));
+  for(let k=0;k<5;k++){const a=k*1.26;ch.part('sac',tube([Math.cos(a)*.2,.02,Math.sin(a)*.22],[Math.cos(a)*.15,.38,Math.sin(a)*.16],.008,.005),HP(C('#5a1d14'),{alpha:.9}),mI())}
+  return setZ(ch,{quad:'boar',speed:1,amp:1},{nombre:'Nara',rol:'Especial · explota',desc:'Jabalí negro con una bolsa de piel llena de gas en el lomo. Dispará a la bolsa de lejos.'},.25)}
+DEFS.Garrafero=Nara;
+
+// ---- pose cuadrúpeda del jabalí ----
+function boarPose(ch,anim,t){
+  const J=ch.J,Rt=(n,x,y,z)=>{const r=J[n].r;r[0]+=x||0;r[1]+=y||0;r[2]+=z||0};
+  const run=anim==='run',walk=anim==='walk'||run;
+  if(anim==='die'){const tt=Math.min(t,1.6),u=ease(tt/.55),dd=ch.dieDir||1;
+    J.root.t[1]=.82*(1-u)+.3*u;J.root.r[2]=dd*1.5*u;J.root.r[0]=.05*u;
+    Rt('neck',.3*u,0,dd*.2*u);Rt('jaw',.4*u);
+    for(const S of['L','R']){const s=S==='L'?1:-1;Rt('sh'+S,-.5*u,0,s*.3*u);Rt('el'+S,.5*u);Rt('hip'+S,.5*u,0,s*.3*u);Rt('kn'+S,.3*u)}
+    return}
+  const ph=t*TAU*(run?2.0:1.2),amp=run?.85:.5;
+  J.root.r[0]+=Math.sin(t*1.7)*.008;
+  if(walk){
+    const dg=[['shL',0],['hipR',0],['shR',Math.PI],['hipL',Math.PI]];
+    for(const [n,o] of dg){const sn=Math.sin(ph+o),cs=Math.cos(ph+o),isF=n[0]==='s';
+      Rt(n,-sn*amp*(isF?1:.9));Rt(isF?'el'+n.slice(2):'kn'+n.slice(3),Math.max(0,cs)*amp*1.3+.05);Rt(isF?'wr'+n.slice(2):'an'+n.slice(3),-Math.max(0,cs)*amp*.5)}
+    J.root.t[1]+=Math.abs(Math.sin(ph))*.045*(run?1.6:1)-.02;
+    Rt('spine',0,Math.sin(ph)*.06,0);Rt('chest',0,-Math.sin(ph)*.06,0);J.root.r[2]+=Math.sin(ph)*.03;
+    Rt('neck',.22+Math.sin(2*ph)*.05+(run?.1:0));Rt('head',.08);J.tail.r[2]=Math.sin(ph*1.5)*.4;J.sac.r[2]=Math.sin(ph*2)*.03;J.sac.r[0]=Math.sin(ph*2+1)*.04}
+  else{
+    Rt('neck',.16+Math.sin(t*.9)*.05,Math.sin(t*.6)*.25);Rt('head',.1+Math.sin(t*1.3)*.04);Rt('jaw',.06+Math.sin(t*2.1)*.03);
+    J.tail.r[2]=Math.sin(t*1.8)*.3;J.sac.r[0]=Math.sin(t*3)*.02;Rt('spine',0,Math.sin(t*.7)*.03)}
+  if(anim==='act'){const u=(t%.9)/.9,dip=ease(u/.4),up=ease((u-.45)/.3),rec=ease((u-.78)/.22);
+    Rt('neck',.5*dip-.9*up*(1-rec));Rt('head',.2*dip-.6*up*(1-rec));Rt('jaw',.5*up*(1-rec));
+    J.root.t[2]+=.2*up*(1-rec);Rt('spine',-.05*dip+.12*up*(1-rec));Rt('shL',-.3*up*(1-rec));Rt('shR',-.3*up*(1-rec))}
+}
+
 
 return {mk,pose,DEFS,GROUPS,WDEFS,QS,armedChar,armedPose,wpose,setQ:q=>{Q=q},mI,mM,mT,mRY,mRX,mRZ,mS,mE};})();
 // ====================================================== PERSONAJES: generador propio (p1-p5) renderizado con un shader "con huesos"
@@ -1982,13 +2112,13 @@ function drawChars(shadow,vmPass){if(!CHARQ.length)return;
  gl.bindVertexArray(null)}
 // pose de infectado (adaptado de la versión MEV)
 const ZNAMES=['Vecino','Mujer','Obrero','Policia','Militar','Bombero','Pibe','Piba','Vecino','Mujer','Paciente','Policia','Pibe'];
-function zChar(z){if(z.ch)return z.ch;const name=z.sp||ZNAMES[(z.id*7)%ZNAMES.length],rs=z.sp?0:(z.id%2);const tpl=charTpl(name,rs);
+function zChar(z){if(z.ch)return z.ch;const name=z.sp||ZNAMES[(z.id*7)%ZNAMES.length],rs=z.sp?0:(z.id%3);const tpl=charTpl(name,rs);
  const ch=skel(tpl);ch.at=R()*5;ch.fl=R()*6;z.ch=ch;z.sc=tpl.scale*(z.tank?1.0:.98+R()*.06);return ch}
 function poseZ(z,dt){const ch=zChar(z),J=ch.J,k=z.sc;const dead=z.state==='dead',chase=z.state==='chase',stag=z.stag>0;
  const fy=z.fy?(z.state==='dead'?z.fy*Math.max(0,1-z.deadT*2.5):z.fy):0;
  ch.rootM=GEN.mM(GEN.mT(z.x,fy,z.z),GEN.mM(GEN.mRY(z.yaw),GEN.mS(k,k,k)));
  if(dead){const T=z.deadT;ch.dieDir=z.fall;GEN.pose(ch,'die',Math.min(T,2));const dec=Math.exp(-T*2.2),f=ch.fl;
-  if(T<3.5){const fl=(n,a,b,zz)=>{J[n].r[0]+=Math.sin(T*11+a)*b*dec;if(zz)J[n].r[2]+=Math.sin(T*8+a)*zz*dec};
+  if(T<3.5&&!(ch.gait&&ch.gait.quad)){const fl=(n,a,b,zz)=>{J[n].r[0]+=Math.sin(T*11+a)*b*dec;if(zz)J[n].r[2]+=Math.sin(T*8+a)*zz*dec};
    fl('shL',f,1.1,.5);fl('shR',f+2,1.1,-.5);fl('elL',f+1,.6);fl('elR',f+3,.6);fl('hipL',f+4,.55,.15);fl('hipR',f+5,.55,-.15);fl('head',f+2,.4,.3);J.root.t[1]+=.1*Math.min(1,T*3);ch.update()}
   ch.noHead=z.noHead;return}
  const sp=z.spdNow;let anim='idle',t;
@@ -1996,12 +2126,13 @@ function poseZ(z,dt){const ch=zChar(z),J=ch.J,k=z.sc;const dead=z.state==='dead'
  else if(chase&&sp>.3){anim=sp>3?'run':'walk';ch.at+=dt*(sp>3?sp/4.2:Math.max(.45,sp/2.4));t=ch.at}
  else{ch.at+=dt;t=ch.at}
  GEN.pose(ch,anim,t);
- if(stag){const q=Math.min(1,z.stag/.5);J.chest.r[0]-=.6*q;J.spine.r[0]-=.35*q;J.head.r[0]-=.5*q;J.shL.r[0]+=.9*q;J.shR.r[0]+=.9*q;J.root.r[2]+=Math.sin(z.stag*30)*.12*q}
- if(chase&&anim!=='act'){const q=sp>3?1.6:1;J.spine.r[0]+=.22*q;J.chest.r[1]+=Math.sin(ch.at*5.1)*.25*q;J.chest.r[2]+=Math.sin(ch.at*2.6)*.14;J.head.r[2]+=Math.sin(ch.at*3.3)*.28;J.head.r[0]+=.18;
+ const quad=ch.gait&&ch.gait.quad;
+ if(stag&&!quad){const q=Math.min(1,z.stag/.5);J.chest.r[0]-=.6*q;J.spine.r[0]-=.35*q;J.head.r[0]-=.5*q;J.shL.r[0]+=.9*q;J.shR.r[0]+=.9*q;J.root.r[2]+=Math.sin(z.stag*30)*.12*q}
+ if(!quad&&chase&&anim!=='act'){const q=sp>3?1.6:1;J.spine.r[0]+=.22*q;J.chest.r[1]+=Math.sin(ch.at*5.1)*.25*q;J.chest.r[2]+=Math.sin(ch.at*2.6)*.14;J.head.r[2]+=Math.sin(ch.at*3.3)*.28;J.head.r[0]+=.18;
   J.shL.r[2]+=Math.sin(ch.at*4)*.22;J.shR.r[0]-=.3+Math.sin(ch.at*3)*.28;J.shL.r[0]-=.2+Math.sin(ch.at*3.4+1)*.28;J.elL.r[0]-=.35;J.elR.r[0]-=.45}
  if(z.fy&&z.sp==='Polilla'){const fl=Math.sin(ch.at*26)*.9;J.wL.r[2]=.35+fl;J.wR.r[2]=-.35-fl;J.root.r[0]-=.3+Math.min(.5,Math.max(0,(2.2-z.fy)*.3));J.hipL.r[0]+=.5;J.hipR.r[0]+=.35}
  ch.update();ch.noHead=z.noHead}
-function renderZ(z){if(z.hidden||Math.hypot(z.x-P.x,z.z-P.z)>42)return;const ch=zChar(z);const hit=z.hit>0?[1.6,.6,.6]:(z.burn>0?[1.4,.9,.5]:[1,1,1]);if(z.burn>0)z.burn-=1/60;queueChar(ch,hit)}
+function renderZ(z){if(z.hidden||Math.hypot(z.x-P.x,z.z-P.z)>42)return;const ch=zChar(z);const hit=z.hit>0?[1.6,.6,.6]:(z.burn>0?[1.4,.9,.5]:(z.sp?[1,1,1]:[.74,.72,.66]));if(z.burn>0)z.burn-=1/60;queueChar(ch,hit)}
 
 // ====================================================== VISOR (?visor): todos los personajes, infectados y armas en terapia
 const VISOR=location.search.indexOf('visor')>=0;
@@ -2588,7 +2719,7 @@ function frame(now){
  buildDyn();render();visorLabels();if(!window.__rdy&&texReady&&preStep()&&++RDN>=4){window.__rdy=1;const l=$('ld');if(l)l.remove()}if(++hudN%3===0&&(S!=='menu'))hud()}
 
 // ====================================================== ENTRADA
-let PREQ=null,PREN=0;function preStep(){if(!PREQ){PREQ=[];for(const n of new Set(ZNAMES))for(const rs of[0,1])PREQ.push(()=>charTpl(n,rs));for(const n of Object.keys(SPDAT))PREQ.push(()=>charTpl(n,0));for(const n of WORDER)PREQ.push(()=>wModel(n));PREN=PREQ.length}
+let PREQ=null,PREN=0;function preStep(){if(!PREQ){PREQ=[];for(const n of new Set(ZNAMES))for(const rs of[0,1,2])PREQ.push(()=>charTpl(n,rs));for(const n of Object.keys(SPDAT))PREQ.push(()=>charTpl(n,0));for(const n of WORDER)PREQ.push(()=>wModel(n));PREN=PREQ.length}
  const t0=performance.now();while(PREQ.length&&performance.now()-t0<40){try{PREQ.shift()()}catch(e){console.warn('pre',e)}}
  const el=document.getElementById('ldt');if(el)el.textContent=PREQ.length?'PREPARANDO CRIATURAS Y ARMAS… '+Math.round(100*(PREN-PREQ.length)/PREN)+'%':'ÚLTIMOS DETALLES…';return !PREQ.length}
 let RDN=0;
