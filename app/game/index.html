@@ -936,7 +936,7 @@ function buildCalle(){const B=[],F=[],L=[],PK=[];let rs=7;const r=()=>{rs=(rs*16
 // Coordenadas locales: origen en el centro de la huella, el frente mira a +z (f=0); f = cuartos de vuelta (0..3).
 function MUEBLES(bx){
  const R=(u,w,f)=>f===0?[u,w]:f===1?[w,-u]:f===2?[-u,-w]:[-w,u];
- const at=(x,z,f)=>(a,y0,c,d,y1,g,m,s)=>{const p=R(a,c,f),q=R(d,g,f);bx(x+Math.min(p[0],q[0]),y0,z+Math.min(p[1],q[1]),x+Math.max(p[0],q[0]),y1,z+Math.max(p[1],q[1]),m,s===true)};
+ const at=(x,z,f)=>(a,y0,c,d,y1,g,m,s)=>{if(m==='steel')m='wGray';const p=R(a,c,f),q=R(d,g,f);bx(x+Math.min(p[0],q[0]),y0,z+Math.min(p[1],q[1]),x+Math.max(p[0],q[0]),y1,z+Math.max(p[1],q[1]),m,s===true)};
  const legs=(b,w,d,h,t,m,i)=>{i=i||0;for(const sx of[-1,1])for(const sz of[-1,1])b(sx*(w/2-i)-t/2,0,sz*(d/2-i)-t/2,sx*(w/2-i)+t/2,h,sz*(d/2-i)+t/2,m,false)};
  const M={};
  // ---------------- sillas
