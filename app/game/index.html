@@ -931,9 +931,87 @@ function buildCalle(){const B=[],F=[],L=[],PK=[];let rs=7;const r=()=>{rs=(rs*16
  function bench(x,z,ry){if(ry){box(x-.25,.42,z-.9,x+.25,.5,z+.9,'wood');box(x-.3,.5,z-.9,x-.22,.95,z+.9,'wood',false)}else{box(x-.9,.42,z-.25,x+.9,.5,z+.25,'wood');box(x-.9,.5,z-.3,x+.9,.95,z-.22,'wood',false)}for(const s of[-1,1])box(ry?x-.2:x+s*.8,0,ry?z+s*.8:z-.2,ry?x+.2:x+s*.8+.1,.42,ry?z+s*.8+.1:z+.2,'steel',false)}
  return{boxes:B,floors:F,lamps:L,picks:PK}}
 
+// v27.3 — muebles 3D de verdad (cajas con volumen, patas, respaldos, cajones), reutilizable para hospital/Muni/casas.
+// MUEBLES(bx) devuelve los constructores. bx(x0,y0,z0,x1,y1,z1,mat,solid) es la caja del generador que lo llame.
+// Coordenadas locales: origen en el centro de la huella, el frente mira a +z (f=0); f = cuartos de vuelta (0..3).
+function MUEBLES(bx){
+ const R=(u,w,f)=>f===0?[u,w]:f===1?[w,-u]:f===2?[-u,-w]:[-w,u];
+ const at=(x,z,f)=>(a,y0,c,d,y1,g,m,s)=>{const p=R(a,c,f),q=R(d,g,f);bx(x+Math.min(p[0],q[0]),y0,z+Math.min(p[1],q[1]),x+Math.max(p[0],q[0]),y1,z+Math.max(p[1],q[1]),m,s===true)};
+ const legs=(b,w,d,h,t,m,i)=>{i=i||0;for(const sx of[-1,1])for(const sz of[-1,1])b(sx*(w/2-i)-t/2,0,sz*(d/2-i)-t/2,sx*(w/2-i)+t/2,h,sz*(d/2-i)+t/2,m,false)};
+ const M={};
+ // ---------------- sillas
+ M.chair=(x,z,f,k)=>{const b=at(x,z,f);k=k||'wood';
+  const wd=k==='steel'||k==='office'?'steel':k==='plastic'?'white':k==='tap'?'wGray':'wood',lg=k==='plastic'?'wGray':k==='office'?'blk':wd;
+  if(k==='office'){b(-.04,0,-.04,.04,.4,.04,'blk',false);b(-.3,0,-.03,.3,.05,.03,'blk',false);b(-.03,0,-.3,.03,.05,.3,'blk',false);
+   b(-.26,.42,-.26,.26,.5,.26,'blk',true);b(-.25,.5,-.28,.25,.95,-.2,'blk',false);b(-.3,.6,-.2,-.26,.7,.2,'blk',false);b(.26,.6,-.2,.3,.7,.2,'blk',false);return}
+  b(-.22,.44,-.22,.22,.49,.22,wd,true);legs(b,.44,.44,.44,.04,lg,.0);
+  b(-.22,.49,-.22,.22,.95,-.18,wd,false);                         // respaldo
+  if(k==='wood'||k==='steel'){b(-.22,.7,-.22,.22,.75,-.18,wd,false)}
+  if(k==='tap')b(-.2,.49,-.2,.2,.53,.2,'brn',false)};
+ M.stool=(x,z)=>{const b=at(x,z,0);b(-.17,.58,-.17,.17,.63,.17,'wood',true);legs(b,.34,.34,.58,.04,'wood',0)};
+ // ---------------- mesas
+ M.table=(x,z,f,w,d,h,k)=>{const b=at(x,z,f);w=w||1.6;d=d||.85;h=h||.76;k=k||'wood';const m=k==='steel'?'steel':k==='white'?'white':'wood';
+  b(-w/2,h-.05,-d/2,w/2,h,d/2,m,true);legs(b,w,d,h-.05,.07,m==='white'?'wGray':m,.06)};
+ M.round=(x,z,r,h)=>{const b=at(x,z,0);r=r||.5;h=h||.74;b(-r,h-.05,-r,r,h,r,'wood',true);b(-.06,0,-.06,.06,h-.05,.06,'wood',false);b(-.3,0,-.3,.3,.04,.3,'wood',false)};
+ M.bench=(x,z,f,l)=>{const b=at(x,z,f);l=l||1.6;b(-l/2,.42,-.22,l/2,.47,.22,'wood',true);b(-l/2+.05,0,-.18,-l/2+.1,.42,.18,'wood',false);b(l/2-.1,0,-.18,l/2-.05,.42,.18,'wood',false)};
+ // ---------------- camas
+ M.bed=(x,z,f,k,col)=>{const b=at(x,z,f);k=k||'wood';col=col||'cream';
+  if(k==='hospital'){b(-.45,.35,-1.0,.45,.4,1.0,'steel',true);b(-.43,.4,-.95,.43,.52,.95,'lblue',false);b(-.45,.35,-1.0,-.4,.95,-.95,'steel',false);b(.4,.35,-1.0,.45,.95,-.95,'steel',false);
+   b(-.45,.35,.95,.45,.8,1.0,'steel',false);for(const sx of[-1,1])b(sx*.45-.02,.55,-.9,sx*.45+.02,.6,.9,'steel',false);legs(b,.9,2.0,.35,.05,'blk',.04);b(-.3,.52,-.9,.3,.6,-.55,'white',false);return}
+  if(k==='cot'){b(-.4,.28,-.95,.4,.34,.95,'olive',true);for(const sx of[-1,1])for(const sz of[-.9,.9])b(sx*.4-.025,0,sz-.025,sx*.4+.025,.28,sz+.025,'blk',false);return}
+  const fr=k==='iron'?'blk':k==='rustic'?'brn':'wood';
+  b(-.7,.2,-1.0,.7,.5,1.0,fr,true);b(-.66,.5,-.96,.66,.68,.96,col,false);b(-.6,.68,-.95,-.05,.78,-.55,'white',false);b(.05,.68,-.95,.6,.78,-.55,'white',false);
+  b(-.7,.2,-1.0,.7,1.1,-.94,fr,false);b(-.7,.2,.94,.7,.62,1.0,fr,false);if(k==='iron')for(const xx of[-.5,-.25,0,.25,.5])b(xx-.015,.5,.94,xx+.015,.9,.98,'blk',false);
+  b(-.66,.5,-.1,.66,.72,.96,col==='cream'?'beige':col==='white'?'wGray':col,false)};
+ M.bunk=(x,z,f)=>{const b=at(x,z,f);for(const sx of[-1,1])for(const sz of[-1,1])b(sx*.45-.035,0,sz*.95-.035,sx*.45+.035,1.65,sz*.95+.035,'blk',false);
+  for(const y of[.35,1.1]){b(-.43,y,-.93,.43,y+.1,.93,'blk',true);b(-.4,y+.1,-.9,.4,y+.22,.9,'blue',false);b(-.35,y+.22,-.88,.35,y+.3,-.5,'white',false)}b(.45,.4,.3,.5,1.5,.34,'blk',false)};
+ // ---------------- living
+ M.sofa=(x,z,f,len,col)=>{const b=at(x,z,f);len=len||2.0;col=col||'maroon';
+  b(-len/2,.1,-.45,len/2,.42,.45,col,true);b(-len/2,.42,-.45,len/2,.9,-.25,col,false);b(-len/2,.42,-.45,-len/2+.2,.64,.45,col,false);b(len/2-.2,.42,-.45,len/2,.64,.45,col,false);
+  b(-len/2+.2,.42,-.25,len/2-.2,.52,.45,'brn',false);for(const sx of[-1,1])b(sx*(len/2-.1)-.03,0,-.4,sx*(len/2-.1)+.03,.1,.4,'blk',false)};
+ M.armchair=(x,z,f,col)=>{M.sofa(x,z,f,.95,col)};
+ // ---------------- guardado
+ M.wardrobe=(x,z,f,w,h,m)=>{const b=at(x,z,f);w=w||1.3;h=h||1.95;m=m||'wood';b(-w/2,0,-.3,w/2,h,.3,m,true);
+  b(-.01,.05,.3,.01,h-.05,.31,'blk',false);b(-.09,h*.5,.3,-.05,h*.5+.15,.33,'brass',false);b(.05,h*.5,.3,.09,h*.5+.15,.33,'brass',false);if(w>1.1){b(-w/2+.4,.05,.3,-w/2+.41,h-.05,.31,'blk',false);b(w/2-.41,.05,.3,w/2-.4,h-.05,.31,'blk',false)}};
+ M.locker=(x,z,f,n)=>{n=n||3;const b=at(x,z,f);const w=.38*n;b(-w/2,0,-.25,w/2,1.85,.25,'steel',true);
+  for(let i=0;i<n;i++){const cx=-w/2+.38*(i+.5);b(cx-.17,1.55,.25,cx+.17,1.7,.255,'blk',false);b(cx-.17,.2,.25,cx+.17,.3,.255,'blk',false);b(cx+.12,1.0,.25,cx+.15,1.08,.28,'brass',false);if(i>0)b(cx-.19-.008,.02,.25,cx-.19+.008,1.83,.256,'blk',false)}};
+ M.shelf=(x,z,f,w,h,rows,books)=>{const b=at(x,z,f);w=w||1.0;h=h||1.9;rows=rows||5;const t=.03;
+  b(-w/2,0,-.18,-w/2+t,h,.18,'wood',true);b(w/2-t,0,-.18,w/2,h,.18,'wood',false);b(-w/2,0,-.18,w/2,h,-.16,'brn',false);
+  for(let i=0;i<=rows;i++){const y=.05+i*(h-.08)/rows;b(-w/2,y,-.18,w/2,y+t,.18,'wood',false);
+   if(books&&i<rows){let xx=-w/2+.06;const C=['red','blue','green','yel','navy','maroon','olive','orange'];let s=i*7+3;while(xx<w/2-.12){s=(s*1103515245+12345)&0x7fffffff;const bw=.03+(s%5)*.008,bh=.2+(s%7)*.02;if((s>>3)%5!==0)b(xx,y+t,-.12,xx+bw,y+t+bh,.1,C[(s>>5)%C.length],false);xx+=bw+.004}}}};
+ M.drawer=(x,z,f,w,h,m)=>{const b=at(x,z,f);w=w||1.1;h=h||.85;m=m||'wood';b(-w/2,0,-.25,w/2,h,.25,m,true);for(const yy of[.1,.35,.6]){b(-w/2+.04,yy,.25,w/2-.04,yy+.2,.256,'blk',false);b(-.05,yy+.08,.25,.05,yy+.1,.28,'brass',false)}};
+ // ---------------- cocina / baño
+ M.counter=(x,z,f,w,sink)=>{const b=at(x,z,f);w=w||1.2;b(-w/2,0,-.3,w/2,.86,.3,'wood',true);b(-w/2-.02,.86,-.32,w/2+.02,.9,.32,'white',false);
+  b(-.01,.05,.3,.01,.8,.31,'blk',false);if(sink){b(-.28,.895,-.17,.28,.9,.17,'steel',false);b(-.02,.9,-.28,.02,1.1,-.24,'steel',false);b(-.02,1.08,-.28,.02,1.11,-.15,'steel',false)}};
+ M.stove=(x,z,f)=>{const b=at(x,z,f);b(-.3,0,-.3,.3,.88,.3,'white',true);b(-.3,.88,-.3,.3,.92,.3,'blk',false);for(const sx of[-1,1])for(const sz of[-1,1])b(sx*.12-.06,.92,sz*.1-.06,sx*.12+.06,.95,sz*.1+.06,'dark',false);
+  b(-.24,.35,.3,.24,.7,.305,'blk',false);b(-.26,.78,.3,.26,.8,.33,'steel',false);for(const sx of[-.18,-.09,0,.09,.18])b(sx-.015,.82,.3,sx+.015,.86,.32,'steel',false);b(-.3,.9,-.3,.3,1.08,-.26,'white',false)};
+ M.fridge=(x,z,f,col,h)=>{const b=at(x,z,f);col=col||'white';h=h||1.75;b(-.33,0,-.33,.33,h,.33,col,true);b(-.33,h*.62,.33,.33,h*.62+.01,.335,'blk',false);b(.24,h*.66,.33,.27,h*.9,.36,'steel',false);b(.24,h*.28,.33,.27,h*.5,.36,'steel',false)};
+ M.toilet=(x,z,f)=>{const b=at(x,z,f);b(-.18,0,-.3,.18,.38,.0,'white',true);b(-.2,.38,-.32,.2,.82,-.16,'white',false);b(-.17,0,-.05,.17,.4,.32,'white',false);b(-.19,.4,-.05,.19,.44,.34,'white',false);b(-.12,.44,-.02,.12,.45,.28,'lblue',false)};
+ M.sink=(x,z,f,ped)=>{const b=at(x,z,f);if(ped){b(-.06,0,-.06,.06,.7,.06,'white',false)}b(-.28,.78,-.22,.28,.88,.22,'white',true);b(-.2,.88,-.16,.2,.89,.16,'wGray',false);b(-.02,.89,-.2,.02,1.0,-.17,'steel',false)};
+ M.bath=(x,z,f)=>{const b=at(x,z,f);b(-.4,.0,-.85,.4,.55,.85,'white',true);b(-.34,.1,-.8,.34,.56,.8,'lblue',false);b(-.02,.55,-.88,.02,.8,-.84,'steel',false)};
+ M.washer=(x,z,f)=>{const b=at(x,z,f);b(-.3,0,-.3,.3,.88,.3,'white',true);b(-.18,.25,.3,.18,.6,.305,'dark',false);b(-.28,.8,.3,.28,.86,.305,'wGray',false)};
+ // ---------------- hospital / oficina
+ M.stretcher=(x,z,f,hi)=>{const b=at(x,z,f);b(-.35,.62,-1.0,.35,.7,1.0,'steel',true);b(-.33,.7,-.95,.33,.82,.95,'blue',false);for(const sx of[-1,1])b(sx*.36-.02,.7,-.95,sx*.36+.02,.95,.95,'steel',false);
+  for(const sx of[-1,1])for(const sz of[-.8,.8]){b(sx*.28-.02,.1,sz-.02,sx*.28+.02,.62,sz+.02,'steel',false);b(sx*.28-.05,0,sz-.05,sx*.28+.05,.1,sz+.05,'blk',false)}
+  if(hi){b(-.02,.95,.9,.02,1.9,.94,'steel',false);b(-.12,1.88,.88,.12,1.92,.96,'steel',false)}};
+ M.cart=(x,z,f,col)=>{const b=at(x,z,f);col=col||'steel';b(-.3,.1,-.22,.3,.9,.22,col,true);b(-.32,.9,-.24,.32,.94,.24,'steel',false);for(const yy of[.2,.4,.6])b(-.26,yy,.22,.26,yy+.15,.225,'blk',false);
+  for(const sx of[-1,1])for(const sz of[-1,1])b(sx*.25-.03,0,sz*.17-.03,sx*.25+.03,.1,sz*.17+.03,'blk',false)};
+ M.desk=(x,z,f,k)=>{const b=at(x,z,f);const m=k==='steel'?'steel':'wood';b(-.7,.72,-.38,.7,.77,.38,m,true);b(-.7,0,-.38,-.4,.72,.38,m,false);b(.4,0,-.38,.7,.72,.38,m,false);b(-.4,.1,-.38,.4,.72,-.34,m,false);
+  for(const yy of[.15,.35,.55])b(.43,yy,.38,.67,yy+.17,.385,'blk',false);if(k==='steel')for(const yy of[.15,.35,.55])b(-.67,yy,.38,-.43,yy+.17,.385,'blk',false)};
+ M.filecab=(x,z,f)=>{const b=at(x,z,f);b(-.23,0,-.3,.23,1.3,.3,'steel',true);for(const yy of[.1,.5,.9]){b(-.2,yy,.3,.2,yy+.35,.305,'wGray',false);b(-.07,yy+.25,.3,.07,yy+.28,.33,'blk',false)}};
+ M.vitrina=(x,z,f,w,h)=>{const b=at(x,z,f);w=w||1.1;h=h||1.7;b(-w/2,0,-.22,w/2,.7,.22,'steel',true);b(-w/2,.7,-.22,w/2,h,-.19,'steel',false);b(-w/2,.7,-.22,-w/2+.03,h,.22,'steel',false);b(w/2-.03,.7,-.22,w/2,h,.22,'steel',false);b(-w/2,h-.03,-.22,w/2,h,.22,'steel',false);
+  b(-w/2+.03,.74,.2,w/2-.03,h-.06,.215,'win',false);for(const yy of[1.0,1.3])b(-w/2+.03,yy,-.19,w/2-.03,yy+.02,.2,'wGray',false);for(const xx of[-.25,0,.25])b(xx-.08,1.02,-.1,xx+.08,1.22,.05,xx>0?'lblue':'white',false)};
+ M.reception=(x,z,f,len)=>{const b=at(x,z,f);len=len||3.2;b(-len/2,0,-.3,len/2,1.05,.3,'wood',true);b(-len/2-.05,1.05,-.4,len/2+.05,1.1,.4,'steel',false);b(-len/2+.1,.25,.3,len/2-.1,.35,.31,'wGray',false);b(-len/2,0,-.3,-len/2+.4,1.05,.9,'wood',true);b(-len/2-.05,1.05,-.4,-len/2+.45,1.1,.95,'steel',false)};
+ M.medcross=(x,z,f,y)=>{const b=at(x,z,f);y=y||1.3;b(-.25,y,-.08,.25,y+.55,.08,'red',false);b(-.04,y+.1,.08,.04,y+.45,.09,'white',false);b(-.15,y+.25,.08,.15,y+.31,.09,'white',false)};
+ M.kit=(x,z,f,y,col)=>{const b=at(x,z,f);y=y||0;b(-.22,y,-.15,.22,y+.3,.15,col||'orange',false);b(-.03,y+.08,.15,.03,y+.22,.16,'white',false);b(-.1,y+.12,.15,.1,y+.18,.16,'white',false)};
+ M.gabinete=(x,z,f)=>{const b=at(x,z,f);b(-.45,0,-.25,.45,1.65,.25,'yel',true);b(-.03,.05,.25,.03,1.6,.255,'blk',false);b(-.3,1.2,.25,-.1,1.4,.256,'red',false)};
+ // ---------------- ropa y calzado (sprites: material r_*/s_*; se pone plano sobre superficies o parado)
+ M.flat=(x,z,y,mat,w,d,rot)=>{const b=at(x,z,rot||0);b(-w/2,y,-d/2,w/2,y+.012,d/2,mat,false)};
+ M.shoe=(x,z,y,mat,w,rot)=>{const b=at(x,z,rot||0);b(-w/2,y,-.015,w/2,y+w*.4,.015,mat,false);b(-.015,y,-w/2,.015,y+w*.4,w/2,mat,false)};
+ return M}
+
 // v26.9 — CALLE DE PRUEBA: una calle corta con todo lo nuevo (texturas propias, árboles, basura/props de Gemini) para recorrer
 const PROPM={"lata":[0.689,0.95],"lata_caida":[0.72,0.6],"tacho_verde":[0.645,1.05],"tacho_negro":[0.776,1.05],"tacho_azul":[0.75,1.05],"cont_verde":[1.343,1.25],"cont_azul":[1.321,1.25],"cont_turq":[1.229,1.25],"cont_abierto":[1.517,1.35],"bolsa_negra":[0.573,0.7],"bolsa_azul":[0.722,0.7],"bolsa_trans":[0.437,0.8],"cesto_verde":[0.626,0.9],"cesto_madera":[0.65,0.9],"cesto_hormigon":[0.72,1.0],"barril_verde":[0.596,1.0],"barril_oxido":[0.624,0.9],"cesto_caido":[0.833,0.6],"caja":[0.408,0.4],"cajon":[0.544,0.45],"pallet":[0.58,0.5],"caja_basura":[0.586,0.5],"pila":[0.837,0.6],"dispersa":[0.656,0.35]};
-Object.assign(PROPM,{"m_ch_bentwood":[0.413,0.95],"m_ch_ladder":[0.599,1.0],"m_ch_cane":[0.695,0.9],"m_ch_wood":[0.591,0.9],"m_ch_tolix":[0.581,0.95],"m_ch_tolixn":[0.581,0.95],"m_ch_oficina":[0.738,1.0],"m_ch_plastic":[0.447,0.85],"m_ch_tapizada":[0.623,0.9],"m_cama_tap":[2.1,1.0],"m_cama_hierro":[1.925,0.95],"m_cama_madera":[1.725,0.95],"m_cama_rustica":[1.643,1.0],"m_litera":[2.134,1.5],"m_cama_gris":[1.831,0.95],"m_sofa_gris":[2.134,0.85],"m_sofa_chester":[2.099,0.85],"m_sofa_cuero":[1.812,0.85],"m_sillon_recl":[1.091,1.0],"m_sillon_gris":[1.032,0.9],"m_sillon_rojo":[0.938,0.85],"m_mesa_madera":[1.721,0.8],"m_mesa_negra":[1.476,0.8],"m_consola":[1.369,0.85],"m_mesita":[0.385,0.6],"m_placar_blanco":[1.457,1.9],"m_placar_madera":[1.183,1.9],"m_lockers_osc":[1.409,1.85],"m_lockers_cla":[1.446,1.85],"m_biblio_madera":[1.008,1.8],"m_biblio_blanca":[1.12,1.8],"m_aparador":[1.823,0.8],"m_aparador_metal":[1.912,0.85],"m_camilla_azul":[1.019,0.9],"m_cama_hosp":[1.202,0.9],"m_camilla_hid":[1.926,1.7],"m_catre_verde":[0.704,0.45],"m_catre_negro":[0.721,0.45],"m_carrito_inst":[0.75,0.95],"m_recepcion":[1.73,1.2],"m_escr_metal":[1.237,0.8],"m_escr_madera":[1.186,0.8],"m_archivo":[0.75,1.3],"m_vitrina_corr":[1.409,1.6],"m_armario_vidrio":[1.125,1.8],"m_botiquin_rojo":[0.445,0.55],"m_maletin":[0.505,0.35],"m_carro_rojo":[1.042,1.2],"m_gabinete_pel":[1.69,1.7],"m_cocina_blanca":[0.653,0.95],"m_cocina_negra":[0.658,0.95],"m_cocina_ind":[0.742,0.95],"m_heladera_bl":[0.898,1.75],"m_heladera_gr":[0.929,1.8],"m_heladera_retro":[0.806,1.55],"m_mesada_acero":[0.892,0.95],"m_mesada_mesa":[0.994,0.95],"m_mesada_madera":[0.773,0.95],"m_lavatorio":[0.619,0.55],"m_lavatorio_pie":[0.705,0.85],"m_inodoro_bl":[0.515,0.75],"m_inodoro_sucio":[0.532,0.75],"m_banera":[1.004,0.6],"m_lavarropas":[0.661,0.9]});
 const PROP_SOLID=new Set(['lata','tacho_verde','tacho_negro','tacho_azul','cont_verde','cont_azul','cont_turq','cont_abierto','cesto_verde','cesto_madera','cesto_hormigon','barril_verde','barril_oxido','cajon']);
 function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  const box=(x0,y0,z0,x1,y1,z1,m,solid)=>B.push({x0,y0,z0,x1,y1,z1,m,solid:solid!==false});
@@ -999,21 +1077,28 @@ function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  bench(40,126,true);bench(44,140,false);
  prop('cesto_verde',39,120);prop('lata',39.4,146);
  for(const[x,z]of[[18.2,84],[34,86],[18.4,92],[34.4,100],[17.8,104],[16.2,118],[16.6,134],[44,118],[48,136],[40,146],[16.4,146]])tree(x,z,'arbusto');
- // ---- EDIFICIO DE MUESTRA (plaza, lado oeste): sala de espera, sala de pacientes y casa, con los muebles de Gemini
- {const X0=1,X1=14,Z0=116,Z1=148,T=.3,H=3.4;floor(X0,Z0,X1,Z1,'lino',.13);
+ // ---- EDIFICIO DE MUESTRA (plaza, lado oeste): sala de espera, sala de pacientes y casa, con muebles 3D (muebles.js)
+ {const X0=1,X1=14,Z0=116,Z1=148,T=.3,H=3.4,M=MUEBLES(box);floor(X0,Z0,X1,Z1,'lino',.13);
   box(X0,0,Z0,X1,H,Z0+T,'wallOut',true);box(X0,0,Z1-T,X1,H,Z1,'wallOut',true);box(X0,0,Z0,X0+T,H,Z1,'wallOut',true);
   box(X1-T,0,Z0,X1,H,120.2,'wallOut',true);box(X1-T,0,121.8,X1,H,Z1,'wallOut',true);box(X1-T,2.3,120.2,X1,H,121.8,'wallOut',false);   // puerta de entrada (hueco 1,6 m) en z 120,2–121,8
   for(const zw of[127,138]){box(X0,0,zw,6.6,H,zw+T,'wallOut',true);box(8.2,0,zw,X1,H,zw+T,'wallOut',true);box(6.6,2.3,zw,8.2,H,zw+T,'wallOut',false)}
   box(X0-.2,H,Z0-.2,X1+.2,H+.3,Z1+.2,'wallOut',false);
   for(const z of[121.5,132.5,143])L.push({x:7.5,z,t:7,c:[1,.95,.85],I:1.3,R:9,y:2.9});
-  for(const z of[119,124.5,130,135,141,146])for(const x of[3,11]){box(x-.45,2.0,z-.3,x+.45,2.35,z+.3,'win',false)}   // ventanas interiores decorativas
-  // sala de espera + recepción
-  prop('m_recepcion',4.2,119.2);prop('m_archivo',2.2,124.8);prop('m_botiquin_rojo',1.3,122,{y:1.3,solid:false});prop('m_vitrina_corr',12.6,125.6);prop('m_ch_tolix',9,124.8);prop('m_ch_tolixn',10.3,124.8);prop('m_ch_tolix',11.6,124.8);prop('m_ch_plastic',9.7,118.3);prop('m_ch_oficina',5.2,121.8);prop('m_escr_metal',9.2,117.9,{s:.9});
+  // sala de espera + recepción (f: 0 mira +z, 1 mira +x, 2 mira -z, 3 mira -x)
+  M.reception(4.3,119.6,0,3.2);M.filecab(2.2,116.9,0);M.filecab(2.8,116.9,0);M.medcross(1.35,123,1,1.3);M.vitrina(13.4,125,3);
+  M.chair(9,124.8,2,'steel');M.chair(10.2,124.8,2,'plastic');M.chair(11.4,124.8,2,'steel');M.chair(9.6,118.6,2,'office');M.desk(9.6,117.2,0,'steel');M.round(11.4,121.9,.35,.5);M.bench(5,125.6,0,2.2);
   // sala de pacientes
-  prop('m_cama_hosp',3.1,129.4);prop('m_cama_hosp',3.1,132.8);prop('m_cama_hosp',3.1,136.2);prop('m_camilla_hid',11.2,129.6);prop('m_carrito_inst',12.9,132.4);prop('m_carro_rojo',12.7,135.2);prop('m_catre_verde',9.8,136);prop('m_gabinete_pel',13,137.2,{solid:true});
-  // casa: cocina, living, dormitorio y baño
-  prop('m_cocina_blanca',2.1,139.8);prop('m_heladera_gr',3.9,139.6);prop('m_mesada_madera',5.9,139.6);prop('m_lavatorio_pie',12.9,140.1);prop('m_inodoro_bl',12.7,142.1);prop('m_banera',11.3,147.1);
-  prop('m_mesa_madera',4.2,143.6);prop('m_ch_bentwood',2.8,143.6);prop('m_ch_ladder',5.6,143.6);prop('m_ch_cane',4.2,141.9);prop('m_sofa_gris',3.6,147.1);prop('m_sillon_rojo',7.4,146.4);prop('m_placar_madera',9.2,147.1);prop('m_cama_madera',9.6,143.2);prop('m_mesita',8,141.4);prop('m_lavarropas',7.6,139.8)}
+  for(const z of[129.7,132.9,136.1])M.bed(2.6,z,1,'hospital');
+  M.stretcher(11.2,129.8,0,true);M.stretcher(11.2,133.4,0,false);M.bed(8.9,135.3,1,'cot');M.bed(8.9,137.0,1,'cot');M.cart(13.3,131.4,3,'steel');M.kit(13.3,131.4,3,.94,'orange');M.cart(13.3,135.2,3,'red');M.gabinete(13.5,137.1,3);M.medcross(13.75,129,3,1.3);M.vitrina(6.0,127.9,0);
+  // casa: cocina, comedor, living, dormitorio y baño
+  M.stove(2.0,139.0,0);M.fridge(3.0,139.0,0,'white');M.counter(4.1,139.0,0,1.2,true);M.counter(5.3,139.0,0,1.2,false);M.washer(6.4,139.0,0);
+  M.toilet(13.4,140.7,3);M.sink(13.4,142.3,3,true);M.bath(12.3,147.2,1);
+  M.table(4.5,143.4,0,1.5,.8,.76,'wood');M.chair(3.3,143.4,1,'wood');M.chair(5.7,143.4,3,'wood');M.chair(4.5,142.2,0,'wood');M.chair(4.5,144.6,2,'tap');
+  M.sofa(3.2,147.0,2,2.0,'maroon');M.armchair(6.4,146.6,2,'green');
+  M.bed(9.3,146.6,2,'wood','blue');M.wardrobe(9.3,138.9,0,1.3,1.95,'wood');M.shelf(11.3,138.7,0,1.0,1.9,5,true);M.drawer(11.0,144.0,3,.6,.7);
+  // ropa y calzado
+  M.flat(9.0,145.4,.73,'p_r_camisa',.55,.73,0);M.flat(9.7,145.2,.73,'p_r_jean',.35,.67,1);M.flat(8.4,140.6,.14,'p_r_campera',.6,.56,0);M.flat(9.4,140.8,.14,'p_r_buzo',.55,.54,0);M.flat(7.8,141.7,.14,'p_r_cargo',.35,.67,0);
+  M.shoe(10.4,140.2,.14,'p_s_zapa',.3,0);M.shoe(10.9,140.4,.14,'p_s_bota',.28,0);M.shoe(12.0,144.8,.14,'p_s_slip',.3,0);M.shoe(7.2,141.0,.14,'p_s_zapato',.3,0)}
  // faroles
  for(const z of[10,32,54,76,98])lamp(18.6,z);for(const z of[21,43,65,87,109])lamp(33.4,z);
  for(const[x,z]of[[16,116],[36,116],[40,136],[26,146]])lamp(x,z);
