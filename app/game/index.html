@@ -933,6 +933,7 @@ function buildCalle(){const B=[],F=[],L=[],PK=[];let rs=7;const r=()=>{rs=(rs*16
 
 // v26.9 — CALLE DE PRUEBA: una calle corta con todo lo nuevo (texturas propias, árboles, basura/props de Gemini) para recorrer
 const PROPM={"lata":[0.689,0.95],"lata_caida":[0.72,0.6],"tacho_verde":[0.645,1.05],"tacho_negro":[0.776,1.05],"tacho_azul":[0.75,1.05],"cont_verde":[1.343,1.25],"cont_azul":[1.321,1.25],"cont_turq":[1.229,1.25],"cont_abierto":[1.517,1.35],"bolsa_negra":[0.573,0.7],"bolsa_azul":[0.722,0.7],"bolsa_trans":[0.437,0.8],"cesto_verde":[0.626,0.9],"cesto_madera":[0.65,0.9],"cesto_hormigon":[0.72,1.0],"barril_verde":[0.596,1.0],"barril_oxido":[0.624,0.9],"cesto_caido":[0.833,0.6],"caja":[0.408,0.4],"cajon":[0.544,0.45],"pallet":[0.58,0.5],"caja_basura":[0.586,0.5],"pila":[0.837,0.6],"dispersa":[0.656,0.35]};
+Object.assign(PROPM,{"m_ch_bentwood":[0.413,0.95],"m_ch_ladder":[0.599,1.0],"m_ch_cane":[0.695,0.9],"m_ch_wood":[0.591,0.9],"m_ch_tolix":[0.581,0.95],"m_ch_tolixn":[0.581,0.95],"m_ch_oficina":[0.738,1.0],"m_ch_plastic":[0.447,0.85],"m_ch_tapizada":[0.623,0.9],"m_cama_tap":[2.1,1.0],"m_cama_hierro":[1.925,0.95],"m_cama_madera":[1.725,0.95],"m_cama_rustica":[1.643,1.0],"m_litera":[2.134,1.5],"m_cama_gris":[1.831,0.95],"m_sofa_gris":[2.134,0.85],"m_sofa_chester":[2.099,0.85],"m_sofa_cuero":[1.812,0.85],"m_sillon_recl":[1.091,1.0],"m_sillon_gris":[1.032,0.9],"m_sillon_rojo":[0.938,0.85],"m_mesa_madera":[1.721,0.8],"m_mesa_negra":[1.476,0.8],"m_consola":[1.369,0.85],"m_mesita":[0.385,0.6],"m_placar_blanco":[1.457,1.9],"m_placar_madera":[1.183,1.9],"m_lockers_osc":[1.409,1.85],"m_lockers_cla":[1.446,1.85],"m_biblio_madera":[1.008,1.8],"m_biblio_blanca":[1.12,1.8],"m_aparador":[1.823,0.8],"m_aparador_metal":[1.912,0.85],"m_camilla_azul":[1.019,0.9],"m_cama_hosp":[1.202,0.9],"m_camilla_hid":[1.926,1.7],"m_catre_verde":[0.704,0.45],"m_catre_negro":[0.721,0.45],"m_carrito_inst":[0.75,0.95],"m_recepcion":[1.73,1.2],"m_escr_metal":[1.237,0.8],"m_escr_madera":[1.186,0.8],"m_archivo":[0.75,1.3],"m_vitrina_corr":[1.409,1.6],"m_armario_vidrio":[1.125,1.8],"m_botiquin_rojo":[0.445,0.55],"m_maletin":[0.505,0.35],"m_carro_rojo":[1.042,1.2],"m_gabinete_pel":[1.69,1.7],"m_cocina_blanca":[0.653,0.95],"m_cocina_negra":[0.658,0.95],"m_cocina_ind":[0.742,0.95],"m_heladera_bl":[0.898,1.75],"m_heladera_gr":[0.929,1.8],"m_heladera_retro":[0.806,1.55],"m_mesada_acero":[0.892,0.95],"m_mesada_mesa":[0.994,0.95],"m_mesada_madera":[0.773,0.95],"m_lavatorio":[0.619,0.55],"m_lavatorio_pie":[0.705,0.85],"m_inodoro_bl":[0.515,0.75],"m_inodoro_sucio":[0.532,0.75],"m_banera":[1.004,0.6],"m_lavarropas":[0.661,0.9]});
 const PROP_SOLID=new Set(['lata','tacho_verde','tacho_negro','tacho_azul','cont_verde','cont_azul','cont_turq','cont_abierto','cesto_verde','cesto_madera','cesto_hormigon','barril_verde','barril_oxido','cajon']);
 function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  const box=(x0,y0,z0,x1,y1,z1,m,solid)=>B.push({x0,y0,z0,x1,y1,z1,m,solid:solid!==false});
@@ -940,7 +941,7 @@ function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  const lamp=(x,z,I)=>L.push({x,z,t:6,c:[1,.88,.66],I:I||1.7,R:17,y:4.2});
  const glow=(x,z,y,c,I,R_)=>L.push({x,z,t:7,c,I,R:R_,y});
  // prop = caja con el sprite en las 6 caras (recorte alfa). o.s escala, o.d profundidad relativa
- const prop=(n,x,z,o)=>{o=o||{};const m=PROPM[n];if(!m)return;const s=(o.s||1)*1.25,w=m[0]*s,h=m[1]*s,d=w*(o.d||.85);box(x-w/2,0,z-d/2,x+w/2,h,z+d/2,'p_'+n,o.solid!==undefined?o.solid:PROP_SOLID.has(n))};
+ const prop=(n,x,z,o)=>{o=o||{};const m=PROPM[n];if(!m)return;const s=(o.s||1)*(n.startsWith('m_')?1:1.25),w=m[0]*s,h=m[1]*s,d=Math.min(w*(o.d||.85),1.3*h+.3),y=o.y||0;box(x-w/2,y,z-d/2,x+w/2,y+h,z+d/2,'p_'+n,o.solid!==undefined?o.solid:(PROP_SOLID.has(n)||n.startsWith('m_')))};
  const tree=(x,z,TK)=>{let h=((x*73856093)^(z*19349663))>>>0;const q=()=>{h=(h*1664525+1013904223)>>>0;return h/4294967296};
   const r0=q(),kind=TK||(r0<.55?'copa':r0<.85?'alamo':'seco'),bark=kind==='seco'?'corteza_q':'corteza';
   const card=(cx,cy,cz,w,hh,M)=>{const o=.02;box(cx-w,cy,cz-o,cx+w,cy+hh,cz+o,M,false);box(cx-o,cy,cz-w,cx+o,cy+hh,cz+w,M,false)};
@@ -993,14 +994,29 @@ function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  prop('barril_oxido',16.4,84);glow(16.4,84,1.1,[1,.45,.15],1.7,8);prop('barril_oxido',35.6,88);glow(35.6,88,1.1,[1,.45,.15],1.7,8);prop('barril_oxido',16.3,100);
  prop('cesto_caido',16.8,89,{solid:false});prop('dispersa',17.3,93,{solid:false});prop('dispersa',34,92,{solid:false});prop('bolsa_trans',34.6,95.5,{solid:false});prop('pallet',35.2,101,{solid:false});prop('caja',17,103,{solid:false});prop('pila',34.2,104.6,{solid:false});prop('cajon',35.6,108);prop('lata_caida',17.2,106,{solid:false});
  // ---- ZONA D: plaza (z 114–148)
- for(const[x,z]of[[6,120],[10,130],[4,140],[11,146],[45,122],[41,134],[48,143],[43,114]])tree(x,z);
- tree(8,135,'alamo');tree(46,128,'alamo');tree(40,142,'seco');
- bench(12,124,true);bench(40,126,true);bench(8,142,false);bench(44,140,false);
- prop('cesto_hormigon',13,119);prop('tacho_verde',13.6,138);prop('cesto_verde',39,120);prop('lata',39.4,146);prop('cesto_madera',14,132);
- for(const[x,z]of[[18.2,84],[34,86],[18.4,92],[34.4,100],[17.8,104],[7,116],[12,122],[5,132],[44,118],[48,136],[40,146],[10,148]])tree(x,z,'arbusto');
- // ---- faroles
+ for(const[x,z]of[[45,122],[41,134],[48,143],[43,114]])tree(x,z);
+ tree(46,128,'alamo');tree(40,142,'seco');
+ bench(40,126,true);bench(44,140,false);
+ prop('cesto_verde',39,120);prop('lata',39.4,146);
+ for(const[x,z]of[[18.2,84],[34,86],[18.4,92],[34.4,100],[17.8,104],[16.2,118],[16.6,134],[44,118],[48,136],[40,146],[16.4,146]])tree(x,z,'arbusto');
+ // ---- EDIFICIO DE MUESTRA (plaza, lado oeste): sala de espera, sala de pacientes y casa, con los muebles de Gemini
+ {const X0=1,X1=14,Z0=116,Z1=148,T=.3,H=3.4;floor(X0,Z0,X1,Z1,'lino',.13);
+  box(X0,0,Z0,X1,H,Z0+T,'wallOut',true);box(X0,0,Z1-T,X1,H,Z1,'wallOut',true);box(X0,0,Z0,X0+T,H,Z1,'wallOut',true);
+  box(X1-T,0,Z0,X1,H,120.2,'wallOut',true);box(X1-T,0,121.8,X1,H,Z1,'wallOut',true);box(X1-T,2.3,120.2,X1,H,121.8,'wallOut',false);   // puerta de entrada (hueco 1,6 m) en z 120,2–121,8
+  for(const zw of[127,138]){box(X0,0,zw,6.6,H,zw+T,'wallOut',true);box(8.2,0,zw,X1,H,zw+T,'wallOut',true);box(6.6,2.3,zw,8.2,H,zw+T,'wallOut',false)}
+  box(X0-.2,H,Z0-.2,X1+.2,H+.3,Z1+.2,'wallOut',false);
+  for(const z of[121.5,132.5,143])L.push({x:7.5,z,t:7,c:[1,.95,.85],I:1.3,R:9,y:2.9});
+  for(const z of[119,124.5,130,135,141,146])for(const x of[3,11]){box(x-.45,2.0,z-.3,x+.45,2.35,z+.3,'win',false)}   // ventanas interiores decorativas
+  // sala de espera + recepción
+  prop('m_recepcion',4.2,119.2);prop('m_archivo',2.2,124.8);prop('m_botiquin_rojo',1.3,122,{y:1.3,solid:false});prop('m_vitrina_corr',12.6,125.6);prop('m_ch_tolix',9,124.8);prop('m_ch_tolixn',10.3,124.8);prop('m_ch_tolix',11.6,124.8);prop('m_ch_plastic',9.7,118.3);prop('m_ch_oficina',5.2,121.8);prop('m_escr_metal',9.2,117.9,{s:.9});
+  // sala de pacientes
+  prop('m_cama_hosp',3.1,129.4);prop('m_cama_hosp',3.1,132.8);prop('m_cama_hosp',3.1,136.2);prop('m_camilla_hid',11.2,129.6);prop('m_carrito_inst',12.9,132.4);prop('m_carro_rojo',12.7,135.2);prop('m_catre_verde',9.8,136);prop('m_gabinete_pel',13,137.2,{solid:true});
+  // casa: cocina, living, dormitorio y baño
+  prop('m_cocina_blanca',2.1,139.8);prop('m_heladera_gr',3.9,139.6);prop('m_mesada_madera',5.9,139.6);prop('m_lavatorio_pie',12.9,140.1);prop('m_inodoro_bl',12.7,142.1);prop('m_banera',11.3,147.1);
+  prop('m_mesa_madera',4.2,143.6);prop('m_ch_bentwood',2.8,143.6);prop('m_ch_ladder',5.6,143.6);prop('m_ch_cane',4.2,141.9);prop('m_sofa_gris',3.6,147.1);prop('m_sillon_rojo',7.4,146.4);prop('m_placar_madera',9.2,147.1);prop('m_cama_madera',9.6,143.2);prop('m_mesita',8,141.4);prop('m_lavarropas',7.6,139.8)}
+ // faroles
  for(const z of[10,32,54,76,98])lamp(18.6,z);for(const z of[21,43,65,87,109])lamp(33.4,z);
- for(const[x,z]of[[16,116],[36,116],[12,136],[40,136],[26,146]])lamp(x,z);
+ for(const[x,z]of[[16,116],[36,116],[40,136],[26,146]])lamp(x,z);
  return{boxes:B,floors:F,lamps:L,picks:PK,signs:[],doors:[]}}
 
 // ====================================================== NIVELES: geometría exacta del hospital MEV (mevdata.js), celdas de 0,5 m
