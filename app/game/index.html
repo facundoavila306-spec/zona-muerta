@@ -791,7 +791,7 @@ const TAPS=()=>['hospital','muni','terminal','plaza','carrefour'].map(k=>CITY.lm
 function cityWaterNear(){for(const l of TAPS()){const p=l.spots&&l.spots[0]||[l.x,l.z];if(Math.hypot(p[0]-P.x,p[1]-P.z)<4)return p}return null}
 function needsHint(){if(cityWaterNear())return'Canilla · tomar agua';const f=cityFoodNear();if(f)return LOOTED.has(f.i)?'Local ya revisado':'Revisar el local (comida)';return''}
 function needsInteract(){if(cityWaterNear()){P.thirst=100;msg('Agua de la canilla. Sed: nada.',2.5);AU.pick&&AU.pick();return true}const f=cityFoodNear();if(f){if(LOOTED.has(f.i)){msg('Acá ya no queda nada.',2);return true}LOOTED.add(f.i);if(R()<.7){P.hunger=Math.min(100,(P.hunger??100)+60);msg('Encontraste comida enlatada. +60 comida.',3)}else msg('Saqueado. No queda nada.',2.5);AU.pick&&AU.pick();noise(P.x,P.z,12);return true}return false}
-function needsUpdate(dt){if(P.hunger===undefined){P.hunger=100;P.thirst=100}const gm=dt*DAY.speed;P.hunger=Math.max(0,P.hunger-gm*100/(1440*1.3));P.thirst=Math.max(0,P.thirst-gm*100/(1440*.9));
+function needsUpdate(dt){if(P.hunger===undefined){P.hunger=100;P.thirst=100}const gm=dt*DAY.speed*(P.who==='Alma'?.75:1);P.hunger=Math.max(0,P.hunger-gm*100/(1440*1.3));P.thirst=Math.max(0,P.thirst-gm*100/(1440*.9));
  const low=P.hunger<25||P.thirst<25;if(low&&!P._needMsg){P._needMsg=1;msg(P.thirst<25?'Tenés sed. Buscá agua en un refugio o una canilla.':'Tenés hambre. Buscá comida en un refugio o un local.',4)}if(!low)P._needMsg=0;
  if((P.hunger<=0||P.thirst<=0)&&P.hp>5)P.hp=Math.max(5,P.hp-.12*dt)}
 function needsSpeed(){return(P.hunger<25||P.thirst<25)?.82:1}
@@ -2588,13 +2588,13 @@ function shove(){P.shoveT=.45;P.shoveA=.2;AU.shove();
   if(z.state==='idle')wake(z,false);
   if(z.tank){z.vx=dx/d*1.5;z.vz=dz/d*1.5;z.stag=.15}else{z.stag=.9;z.vx=dx/d*9;z.vz=dz/d*9;z.hp-=6;AU.splat(z.x,z.z,.7);if(z.hp<=0)killZ(z,false,dx/d,dz/d)}}}
 function reload(){if(P.reload>0||P.mag>=30||P.res<=0)return;P.reload=.001;P.rph=0}
-function interact(){if(P.face>0){P.face-=1.3;P.shake=Math.max(P.shake||0,.4);if(P.face<=0){P.face=0;msg('Lo arrancaste. Pisalo antes de que vuelva.',3);AU.splat&&AU.splat(P.x,P.z,.8)}return}if(typeof mercInteract==='function'&&mercInteract())return;if(typeof refugeInteract==='function'&&refugeInteract())return;if(typeof needsInteract==='function'&&needsInteract())return;
+function interact(){if(P.face>0){P.face-=1.3;P.shake=Math.max(P.shake||0,.4);if(P.face<=0){P.face=0;msg('Lo arrancaste. Pisalo antes de que vuelva.',3);AU.splat&&AU.splat(P.x,P.z,.8)}return}if(typeof mercInteract==='function'&&(mercInteract()||protaInteract()))return;if(typeof refugeInteract==='function'&&refugeInteract())return;if(typeof needsInteract==='function'&&needsInteract())return;
  let best=null,bd=3.2;const f=fwd();
  for(const d of DOORS){if(d.open>.5)continue;const dx=(d.cx+.5)*CS-P.x,dz=(d.cy+.5)*CS-P.z,dd=Math.hypot(dx,dz);if(dd<bd&&(dx*f[0]+dz*f[2])/dd>.3){bd=dd;best=d}}
  if(best){openDoor(best);return}
  }
 function startEvent(h){EV.s=1;EV.t=0;EV.wave=0;AU.alarmOn();AU.click();msg(h?'¡Te vieron! ¡Viene la horda, corré!':'¡Tenés la llave! Saltó la alarma: aguantá y corré a la escalera',4)}
-function hintFor(){const f=fwd();let t='';{const mh=typeof mercHint==='function'?mercHint():'';if(mh)return mh;const rh=typeof refugeHint==='function'?refugeHint():'';if(rh)return rh;const nh=typeof needsHint==='function'?needsHint():'';if(nh)return nh}
+function hintFor(){const f=fwd();let t='';{const mh=typeof mercHint==='function'?(mercHint()||protaHint()):'';if(mh)return mh;const rh=typeof refugeHint==='function'?refugeHint():'';if(rh)return rh;const nh=typeof needsHint==='function'?needsHint():'';if(nh)return nh}
  for(const d of DOORS){if(d.open>.5)continue;const dx=(d.cx+.5)*CS-P.x,dz=(d.cy+.5)*CS-P.z,dd=Math.hypot(dx,dz);if(dd<3.2&&(dx*f[0]+dz*f[2])/dd>.3){t=d.mev&&d.mev.ref?'Abrir el portón del refugio':'Abrir puerta';break}}
  if(!t&&EV.s<2&&gate.open<.5&&gate.cells.length){const hz=gate.cells.length>1&&gate.cells[1][0]!==gate.cells[0][0];const dx=(hz?gate.cells[0][0]+1:gate.cells[0][0]+.5)*CS-P.x,dz=(hz?gate.cells[0][1]+.5:gate.cells[0][1]+gate.cells.length/2)*CS-P.z,dd=Math.hypot(dx,dz);if(dd<3&&(dx*f[0]+dz*f[2])/dd>.3)t=EV.s===0?'Escalera cerrada con llave':'Trabada: esperá la alarma'}return t}
 
@@ -2626,7 +2626,7 @@ function newGame(){
  Object.assign(P,{x:START.x,z:START.z,y:0,vy:0,yaw:START.yaw,pitch:0,hp:100,mag:30,res:120,reload:0,fireT:0,shoveT:0,kick:0,heat:0,hurt:0,shake:0,mf:0,kills:0,inten:0,pvx:0,pvz:0,fl:true,regen:0,st:1,tired:0,sk:0,gnd:true,sprint:false});
  for(const c of ZSPAWN)mkZ((c[0]+.5)*CS,(c[1]+.5)*CS,'idle');
  dirCd=18;fdCell=-1;AU.alarmOff();$('tank').style.display='none';
- scriptT=0;if(VISOR){if(!VIS.length)visorSetup();$('obj').style.display='none';$('kills').style.display='none'}else{msg(LVL.intro,5);compInit();if(LVL.city&&typeof mercInit==='function')mercInit()}}
+ scriptT=0;if(VISOR){if(!VIS.length)visorSetup();$('obj').style.display='none';$('kills').style.display='none'}else{msg(LVL.intro,5);compInit();if(LVL.city&&typeof mercInit==='function'){mercInit();protaPlace()}}}
 let fadeT=0;
 function nextLevel(){if(LVLN>=5){S='win';document.exitPointerLock&&document.exitPointerLock();AU.alarmOff();showOv('¡LLEGASTE AL REFUGIO!','Capítulo 1 completo · Bajas: '+P.kills+'  ·  Tiempo: '+Math.floor(time/60)+':'+String(Math.floor(time%60)).padStart(2,'0')+'  ·  R para jugar de nuevo',false);return}
  const txt=LVL.next;loadLevel(LVLN+1);FD=new Int16Array(W*H).fill(-1);BQ=new Int32Array(W*H);fdN=0;buildStatic();zs=[];parts=[];tracers=[];decals=[];EV.s=0;EV.t=0;EV.wave=0;EV.tank=false;AU.alarmOff();
@@ -2669,7 +2669,7 @@ function update(dt){
  }
  // flow field
  fdT-=dt;const pc=I(CXo(P.x),CXo(P.z));if(pc!==fdCell||fdT<=0){fdCell=pc;fdT=.4;updateFD()}
- if(VISOR)visorUpdate(dt);for(const z of zs)updZ(z,dt);compUpdate(dt);if(typeof mercUpdate==='function')mercUpdate(dt);script(dt);{const fr=Math.floor(time*60);for(const z of zs){if(z.hidden)continue;const dd=Math.hypot(z.x-P.x,z.z-P.z);if(dd<30&&(dd<14||((fr+z.id)&1)))poseZ(z,dd<14?dt:dt*2)}}
+ if(VISOR)visorUpdate(dt);for(const z of zs)updZ(z,dt);compUpdate(dt);if(typeof mercUpdate==='function'){mercUpdate(dt);protaUpdate(dt)}script(dt);{const fr=Math.floor(time*60);for(const z of zs){if(z.hidden)continue;const dd=Math.hypot(z.x-P.x,z.z-P.z);if(dd<30&&(dd<14||((fr+z.id)&1)))poseZ(z,dd<14?dt:dt*2)}}
  // limpieza de cadáveres
  if(zs.length>70){for(let i=0;i<zs.length&&zs.length>70;i++)if(zs[i].state==='dead'&&zs[i].deadT>6&&!zs[i].corpse){zs.splice(i,1);i--}}
  // partículas
@@ -2704,9 +2704,9 @@ const WMODELS={};function wModel(n){if(WMODELS[n])return WMODELS[n];GEN.setQ(GEN
 const FIRES=[],FLARES=[],THROWS=[];
 function wCur(){return WORDER[WI]}
 function wSel(i){if(i===WI||WRL>0)return;P.scope=0;WI=i;WANIM='idle';WAT=0;WCD=.3;AU.click();msg(WNAME[wCur()],1)}
-function wReload(){const n=wCur(),d=WDAT[n],s=WS[n];if(d.k!=='gun'||WRL>0||s.mag>=d.mag||s.res<=0)return;P.scope=0;WRL=d.rl;WANIM='reload';WAT=0;AU.reload(0);
+function wReload(){const n=wCur(),d=WDAT[n],s=WS[n];if(d.k!=='gun'||WRL>0||s.mag>=d.mag||s.res<=0)return;P.scope=0;WRL=d.rl*(P.who==='Maxi'?.75:1);WANIM='reload';WAT=0;AU.reload(0);
  setTimeout(()=>AU.reload(1),d.rl*450);setTimeout(()=>AU.reload(2),d.rl*800)}
-function shotRay(d,dmgMul){const f=fwd(),sp=d.spread+(P.scope?.15:1)*(P.moving*.01+P.heat*.012);
+function shotRay(d,dmgMul){const f=fwd(),sp=(P.who==='Facundo'?.8:1)*d.spread+(P.scope?.15:1)*(P.moving*.01+P.heat*.012);
  let dx=f[0]+(R()-.5)*sp*2,dy=f[1]+(R()-.5)*sp*2,dz=f[2]+(R()-.5)*sp*2;const l=Math.hypot(dx,dy,dz);dx/=l;dy/=l;dz/=l;
  const ey=eyeY();let h=castRay(P.x,ey,P.z,dx,dy,dz,70);const hid=[];let mul=1;
  for(let pn=0;h.type==='zombie'&&pn<(d.pen||0);pn++){const z=h.z,dist=h.t,fall=d.pellets?Math.max(.35,1-dist/14):1;hurtZ(z,d.dmg*dmgMul*mul*(P.scope?1.35:1)*fall*(h.head?d.hx:1)*(z.tank?.6:1),h.head,dx,dz,h.x,h.y,h.z2);if(d.kb&&!z.tank&&z.state!=='dead'){z.vx+=dx*d.kb;z.vz+=dz*d.kb;z.stag=Math.max(z.stag,.18)}
@@ -2728,7 +2728,7 @@ function wFire(){const n=wCur(),d=WDAT[n],s=WS[n];if(WCD>0||WRL>0||P.hp<=0||P.sp
   {const sg=WCOMBO?1:-1,ey=eyeY(),rxv=-Math.cos(P.yaw),rzv=Math.sin(P.yaw);setTimeout(()=>{for(let k=0;k<=14;k++){const tt=k/14*2-1,lat=sg*tt*1.15,ht=-tt*.5,fd=1.25+(1-tt*tt)*.45;
     parts.push({x:P.x+Math.sin(P.yaw)*fd+rxv*lat,y:ey-.15+ht,z:P.z+Math.cos(P.yaw)*fd+rzv*lat,vx:rxv*sg*2.5,vy:-.8,vz:rzv*sg*2.5,life:.12+k*.006,sz:.03,c:[1,.95,.85],e:1.4,g:0})}},d.sw*120)}for(const z of zs){if(z.state==='dead'||z.hidden)continue;const dx=z.x-P.x,dz=z.z-P.z,dd=Math.hypot(dx,dz);if(dd>d.reach)continue;
    const a=Math.atan2(dx,dz)-P.yaw;if(Math.abs(((a+9.4247)%6.2832)-3.1416)>d.arc)continue;
-   const head=P.pitch>.12&&dd<1.6;hurtZ(z,d.dmg*(head?1.8:1)*(z.tank?.6:1),head,dx/dd,dz/dd,z.x-dx/dd*.3,1.2,z.z-dz/dd*.3);if(!z.tank){z.stag=Math.max(z.stag,.5);const kb=(1.6-dd/d.reach*.6)*(n==='Hacha'?4.5:6);z.vx=dx/dd*kb;z.vz=dz/dd*kb}hit=true;nh++}
+   const head=P.pitch>.12&&dd<1.6;hurtZ(z,d.dmg*(P.who==='Aurelio'?1.3:1)*(head?1.8:1)*(z.tank?.6:1),head,dx/dd,dz/dd,z.x-dx/dd*.3,1.2,z.z-dz/dd*.3);if(!z.tank){z.stag=Math.max(z.stag,.5);const kb=(1.6-dd/d.reach*.6)*(n==='Hacha'?4.5:6);z.vx=dx/dd*kb;z.vz=dz/dd*kb}hit=true;nh++}
   if(hit){P.shake=Math.max(P.shake,.2+Math.min(nh,4)*.1);P.kick=Math.max(P.kick,.5)}noise(P.x,P.z,8)}
  else if(d.k==='throw'){if(s.res<=0){AU.click();WCD=.4;return}s.res--;WCD=d.rate;WANIM='use';WAT=0;const f=fwd();
   THROWS.push({kind:n,x:P.x+f[0]*.5,y:eyeY()-.1,z:P.z+f[2]*.5,vx:f[0]*11+P.pvx,vy:f[1]*11+3.5,vz:f[2]*11+P.pvz,t:0,spin:R()*6});AU.noise(.12,'bandpass',600,1800,.25,0,.1)}}
@@ -3041,6 +3041,22 @@ function mercHud(){const hs=mercHired();if(!hs.length)return'';return hs.map(h=>
 function mercSave(){return MERCS.map(m=>[m.st==='dead'||m.st==='gone'?0:1,Math.round(m.hp),m.trust])}
 function mercLoad(a){if(!a)return;a.forEach((v,i)=>{const m=MERCS[i];if(!m)return;if(!v[0]){m.st='gone'}else{m.st='base';m.x=m.spot[0];m.z=m.spot[1];m.hp=v[1]||m.d.hp;m.trust=v[2]||0}});COMPS.length=0}
 
+// ---------- v26.3 protagonistas jugables: elegís uno; los otros tres esperan en la Capilla hasta que entren jugadores
+const PROTAS={Facundo:{w:'Revolver',wi:1,perk:'Puntería (dispersión -20%)'},Alma:{w:'Pistola',wi:0,perk:'Resistencia (hambre y sed bajan 25% más lento)'},Aurelio:{w:'Stillson',wi:6,perk:'Fuerza (cuerpo a cuerpo +30%)'},Maxi:{w:'Fusil',wi:4,perk:'Manos rápidas (recarga 25% más rápida)'}};
+window.PROTA_INFO={Facundo:'puntería',Alma:'resistencia',Aurelio:'fuerza',Maxi:'recarga rápida'};
+const PROTS=[];
+function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;WI=w.wi;msg('Jugás como '+P.who+'. '+w.perk,5)}
+function protaPlace(){PROTS.length=0;const RF=(CITY.refuges||[])[0];if(!RF)return;let k=0;for(const n of Object.keys(PROTAS)){if(n===(P.who||'Facundo'))continue;
+ let c;try{c=GEN.armedChar(n,PROTAS[n].w)}catch(e){continue}c.tpl=charTplObj(c);c.wp.tpl=charTplObj(c.wp);
+ PROTS.push({n,ch:c,x:RF.x+1.5+k*2.2,z:RF.z+3.6,yaw:Math.PI,t:R()*5});k++}}
+function protaNear(){for(const q of PROTS)if(Math.hypot(q.x-P.x,q.z-P.z)<2.4)return q;return null}
+function protaUpdate(dt){for(const q of PROTS){q.t+=dt;const dP=Math.hypot(q.x-P.x,q.z-P.z);if(dP>45)continue;const ty=dP<6?Math.atan2(P.x-q.x,P.z-q.z):Math.PI;q.yaw+=((ty-q.yaw+9.4247)%6.2832-3.1416)*Math.min(1,dt*3);
+ const ch=q.ch;ch.rootM=GEN.mM(GEN.mT(q.x,0,q.z),GEN.mM(GEN.mRY(q.yaw),GEN.mS(ch.scale||1,ch.scale||1,ch.scale||1)));GEN.armedPose(ch,'idle',q.t)}}
+function protaQueue(){for(const q of PROTS){if(Math.hypot(q.x-P.x,q.z-P.z)>40)continue;queueChar(q.ch,[1,1,1]);queueChar(q.ch.wp,[1,1,1])}}
+const PROTA_SAY={Facundo:['Cuando entre alguien más, salgo con ustedes.','Andá tranquilo, acá aguantamos.'],Alma:['Cuidate. Si traés la insulina, acá la espero.','Cuando se sumen los otros, vamos todos.'],Aurelio:['La camioneta espera la nafta. Y a mí me espera el sillón.','Si se arma el grupo de cuatro, voy adelante.'],Maxi:['Con el handy escuchamos la ciudad entera.','Cuando entren los demás, salimos los cuatro.']};
+function protaHint(){const q=protaNear();return q?'Hablar con '+q.n:''}
+function protaInteract(){const q=protaNear();if(!q)return false;const L=PROTA_SAY[q.n];say(q.n,L[(R()*L.length)|0]);return true}
+
 // ---- construcción de instancias dinámicas
 const _b=new Float32Array(16),_a=new Float32Array(16),_c=new Float32Array(16),_d=new Float32Array(16),_m1=new Float32Array(16),_m2=new Float32Array(16),_m3=new Float32Array(16);
 function pbox(m,col,ox,oy,oz,sx,sy,sz,emi,layer,uvs){cp(_d,m);tr(_d,ox,oy,oz);sc(_d,sx,sy,sz);DB.add(_d,col[0],col[1],col[2],1,layer===undefined?5:layer,uvs||2.5,emi||0,1)}
@@ -3060,7 +3076,7 @@ function buildDyn(){
   else if(p.t==='q'){const c=p.m.d.col;box(DB,p.x,by+.35,p.z,.34,.3,.26,time*1.2,c,8,1,.7,0);box(DB,p.x,by+.55,p.z,.1,1.6,.1,0,[1,.9,.4],8,1,1.6,0);box(DB,p.x,.05,p.z,1.1,.02,1.1,time*.5,[1,.8,.2],8,1,2.2,0)}
   else if(p.t==='k'){box(DB,p.x,by+.4,p.z,.08,.3,.02,time*1.2,[.9,.75,.2],8,1,.9,0);box(DB,p.x,by+.58,p.z,.16,.16,.02,time*1.2,[.9,.75,.2],8,1,.9,0);box(DB,p.x,by+.4,p.z,.6,.02,.6,time*.5,[1,.8,.2],8,1,2.5,0)}
   else{box(DB,p.x,by,p.z,.46,.3,.32,time*.8,[.9,.9,.9],8,1,.25,0);box(DB,p.x,by,p.z,.1,.32,.08,time*.8,[.9,.1,.1],8,1,.9,0);box(DB,p.x,by,p.z,.3,.32,.1,time*.8+0,[.9,.1,.1],8,1,.9,0)}}
- if(VISOR)visorQueue();else{for(const z of zs)renderZ(z);compQueue();if(typeof refugeQueue==='function')refugeQueue();if(typeof mercQueue==='function')mercQueue()}
+ if(VISOR)visorQueue();else{for(const z of zs)renderZ(z);compQueue();if(typeof refugeQueue==='function')refugeQueue();if(typeof mercQueue==='function'){mercQueue();protaQueue()}}
  // efectos
  for(const d of decals)FB.add(d.m,d.c[0],d.c[1],d.c[2],1,d.layer,1,0,2);
  for(const q of parts){const s=q.sz*Math.min(1,q.life*3);box(FB,q.x,q.y,q.z,s,s,s,0,q.c,8,1,q.e,0)}
@@ -3150,7 +3166,7 @@ loadMevTextures();newGame();
 // ====================================================== MENÚ PRINCIPAL / PAUSA / CONFIGURACIÓN / GUARDAR (v24.7)
 let ZSENS=1;
 const ZM=(()=>{
- const CFG={sens:1,vol:.85,fps:true};try{Object.assign(CFG,JSON.parse(localStorage.getItem('zmCFG')||'{}'))}catch(e){}
+ const CFG={sens:1,vol:.85,fps:true,who:'Facundo'};try{Object.assign(CFG,JSON.parse(localStorage.getItem('zmCFG')||'{}'))}catch(e){}
  const saveCfg=()=>{try{localStorage.setItem('zmCFG',JSON.stringify(CFG))}catch(e){}};
  const apply=()=>{ZSENS=CFG.sens;if(AU&&AU.master)AU.master.gain.value=CFG.vol;const f=$('fps');if(f)f.style.display=CFG.fps?'':'none'};
  const SK='zmSave1';const getSave=()=>{try{return JSON.parse(localStorage.getItem(SK)||'null')}catch(e){return null}};
@@ -3177,7 +3193,7 @@ const ZM=(()=>{
  const fmt=t=>{const d=new Date(t);return d.toLocaleDateString()+' '+d.toLocaleTimeString().slice(0,5)};
  const KEYS='<div class="keys">WASD moverse · Shift correr · Espacio saltar / trepar · Click disparar · Click der. empujar<br>R recargar · F linterna · E usar · M mapa · TAB pedidos · Ruedita mira / cambiar arma · Esc pausa</div>';
  function render(msg){const sv=getSave();let h='';
-  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN CENTRO · EL GALLO McFLAY</div>`+B('play','JUGAR')+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
+  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN CENTRO · EL GALLO McFLAY</div>`+B('play','JUGAR')+`<div class="row" style="grid-template-columns:150px 200px"><span>Personaje</span><button id="zm_who" style="font-size:15px;padding:4px 10px">${CFG.who} · ${(window.PROTA_INFO||{})[CFG.who]||''}</button></div>`+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
   else if(panel==='pause'){h=`<h2>PAUSA</h2>`+B('cont','CONTINUAR')+B('save','GUARDAR')+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)}</div>`:'')+B('cfg','CONFIGURACIÓN')+B('menu','SALIR AL MENÚ')+((window.zm&&window.zm.update)?B('quit','SALIR DEL JUEGO'):'')}
   else if(panel==='cfg'){h=`<h2>CONFIGURACIÓN</h2>
    <div class="row"><span>Calidad gráfica</span><button id="zm_q" style="font-size:15px;padding:4px 10px">${QLV[QL].n}</button></div>
@@ -3190,6 +3206,7 @@ const ZM=(()=>{
   on('cont',resume);on('save',save);on('menu',toMenu);on('back',()=>{panel=prev;render()});
   on('q',()=>{QL=(QL+1)%QLV.length;try{localStorage.setItem('zmQL',QL)}catch(e){}render()});
   on('fps',()=>{CFG.fps=!CFG.fps;saveCfg();apply();render()});
+  on('who',()=>{const L=['Facundo','Alma','Aurelio','Maxi'];CFG.who=L[(L.indexOf(CFG.who)+1)%4];saveCfg();render()});
   const sl=(id,k,lab,f)=>{const i=document.getElementById('zm_'+id);if(i)i.addEventListener('input',()=>{CFG[k]=+i.value;document.getElementById(lab).textContent=f(CFG[k]);saveCfg();apply()})};
   sl('sens','sens','zm_sv',v=>v.toFixed(2));sl('vol','vol','zm_vv',v=>Math.round(v*100)+'%');
   on('upd',async()=>{const m=document.getElementById('zm_msg'),b=document.getElementById('zm_upd');b.disabled=true;m.textContent='Buscando actualización…';try{const r=await window.zm.update();m.textContent=r.msg}catch(e){m.textContent='No se pudo actualizar (revisá tu internet)'}b.disabled=false});
@@ -3197,16 +3214,16 @@ const ZM=(()=>{
  function show(p,msg){panel=p;el.style.display='flex';$('ov').style.display='none';render(msg)}
  function hide(){el.style.display='none'}
  function lock(){if(!TEST)cv.requestPointerLock&&cv.requestPointerLock()}
- function play(){hide();S='menu';start();P.chapas=0;apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
+ function play(){hide();S='menu';P.who=CFG.who;start();P.chapas=0;if(typeof protaStart==='function')protaStart();apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
  function resume(){hide();S='play';apply();lock()}
  function toMenu(){S='menu';document.exitPointerLock&&document.exitPointerLock();show('main')}
  function save(){if(!LVL||!LVL.city){render('Solo se puede guardar en la ciudad');return}
-  const d={v:1,date:Date.now(),P:{x:P.x,z:P.z,y:P.y,yaw:P.yaw,hp:P.hp,kills:P.kills,chapas:P.chapas|0,hunger:P.hunger??100,thirst:P.thirst??100},WS:JSON.parse(JSON.stringify(WS,(k,v)=>v===Infinity?'inf':v)),WI,DAY:DAY.t,
+  const d={v:1,date:Date.now(),P:{x:P.x,z:P.z,y:P.y,yaw:P.yaw,hp:P.hp,kills:P.kills,chapas:P.chapas|0,hunger:P.hunger??100,thirst:P.thirst??100,who:P.who||'Facundo'},WS:JSON.parse(JSON.stringify(WS,(k,v)=>v===Infinity?'inf':v)),WI,DAY:DAY.t,
    M:MISSIONS.map(m=>[m.done?1:0,m.got?1:0,m.rej||0]),MERC:(typeof mercSave==='function'?mercSave():null),MI,MDONE};
   try{localStorage.setItem(SK,JSON.stringify(d));render('Partida guardada')}catch(e){render('No se pudo guardar')}}
  function load(){const d=getSave();if(!d){render('No hay partida guardada');return}
   hide();S='menu';start();apply();
-  Object.assign(P,{x:d.P.x,z:d.P.z,y:d.P.y||0,vy:0,yaw:d.P.yaw,pitch:0,hp:d.P.hp,kills:d.P.kills||0,chapas:d.P.chapas||0,hunger:d.P.hunger??100,thirst:d.P.thirst??100});
+  Object.assign(P,{x:d.P.x,z:d.P.z,y:d.P.y||0,vy:0,yaw:d.P.yaw,pitch:0,hp:d.P.hp,kills:d.P.kills||0,chapas:d.P.chapas||0,hunger:d.P.hunger??100,thirst:d.P.thirst??100,who:d.P.who||'Facundo'});if(typeof protaPlace==='function')protaPlace();
   for(const n in d.WS)if(WS[n])for(const k in d.WS[n])WS[n][k]=d.WS[n][k]==='inf'?Infinity:d.WS[n][k];if(d.WI!==undefined)WI=d.WI;DAY.t=d.DAY;
   for(const m of MISSIONS)if(m.pick){const j=PICKS.indexOf(m.pick);if(j>=0)PICKS.splice(j,1);m.pick=null}
   (d.M||[]).forEach((a,i)=>{const m=MISSIONS[i];if(!m)return;m.done=!!a[0];m.got=!!a[1]&&!a[0];m.rej=a[2]||0});
