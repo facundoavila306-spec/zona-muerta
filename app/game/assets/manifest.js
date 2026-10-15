@@ -1,2 +1,4 @@
-// Ejemplo: poné imágenes en assets/tex y descomentá.
-// const ASSETS={tex:{"bldg":{f:"tex/fachada1.jpg",size:4}}};   // ver LEEME-texturas.txt
+// Texturas propias: ver LEEME-texturas.txt. size = metros por repetición.
+const ASSETS={tex:{
+  "bldg":{f:"tex/fachada.jpg",size:4}
+}};
