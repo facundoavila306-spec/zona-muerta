@@ -2702,7 +2702,7 @@ function updZ(z,dt){
   if(d<3.5||(d<16&&losClear(z.x,z.z,P.x,P.z)&&Math.abs(((Math.atan2(dx,dz)-z.yaw+9.4247)%6.2832)-3.1416)<1.9&&d<(P.fl?16:9)))wake(z);
   return}
  // persecución
- let tx,tz;const los=d<26&&losClear(z.x,z.z,P.x,P.z);
+ let tx,tz;const los=d<26&&losClear(z.x,z.z,P.x,P.z);if(los||d<9){z.lostT=0}else{z.lostT=(z.lostT||0)+dt;if(z.lostT>(d>30?2.5:5)&&!z.weak){z.state='idle';z.lostT=0;z.wx=null;z.wT=2+R()*3;z.gT=4+R()*6;z.spdNow=0;return}}
  if(los||d<2.5){tx=P.x;tz=P.z}else{const cx=CXo(z.x),cy=CXo(z.z),cur=FD[I(cx,cy)];
   if(cur<0){tx=P.x;tz=P.z}else{let best=cur,bx=cx,by=cy;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){if(!i&&!j)continue;const a=cx+i,b=cy+j;if(!passable(a,b))continue;if(i&&j&&(!passable(cx+i,cy)||!passable(cx,cy+j)))continue;const f=FD[I(a,b)];if(f>=0&&f<best){best=f;bx=a;by=b}}
    tx=(bx+.5)*CS;tz=(by+.5)*CS}}
