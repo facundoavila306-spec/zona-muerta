@@ -1,0 +1,21 @@
+TEXTURAS PROPIAS (se cargan desde carpetas, sin tocar el juego)
+================================================================
+1) Poné tus imágenes (jpg o png, idealmente 512x512 o 1024x1024, que se repitan bien) en esta carpeta "tex".
+2) Abrí manifest.js y escribí qué material reemplaza cada imagen. Ejemplo:
+
+const ASSETS={tex:{
+  "bldg":   {f:"tex/fachada.jpg",   size:4},   // paredes de edificios (size = metros por repetición)
+  "asph":   {f:"tex/asfalto.jpg",   size:3},
+  "walk":   {f:"tex/vereda.jpg",    size:1.5},
+  "wallOut":{f:"tex/revoque.jpg",   size:3},
+  "win":    {f:"tex/vidrio.png",    size:1,  cut:1}   // cut:1 = respeta transparencia del png
+}};
+
+3) Nombres de materiales que podés reemplazar:
+   asph (calle) · walk (vereda) · bldg (fachadas grandes) · wallOut (paredes de casas) · marble · cream · beige · white
+   win (ventanas) · wood (madera) · steel (chapa/metal) · dark · blk · ceil (cielorrasos) · lino (pisos interiores)
+   green (pasto) · brn (tierra) · red · blue · yel · olive · navy · orange · pink · lblue · maroon · wGray
+   car1..car4 (autos) · tileW · tilePB (azulejos) · gchair · brass
+
+4) Guardá y abrí el juego con JUGAR.bat. Si una imagen no carga, el juego usa la textura de siempre.
+   Esta carpeta NO se pisa con las actualizaciones (solo se copia manifest.js si no existe).
