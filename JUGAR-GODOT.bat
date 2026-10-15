@@ -15,6 +15,7 @@ if errorlevel 1 (
   powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue';Invoke-WebRequest '%RAW%/ZonaMuerta.pck' -OutFile godot\ZonaMuerta.pck"
   copy /y godot\version.new godot\version.txt >nul
  )
+ powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue';try{Invoke-WebRequest '%RAW%/ZonaMuerta.console.exe' -OutFile godot\ZonaMuerta.console.exe}catch{}"
  if not exist godot\ZonaMuerta.exe (
   echo Bajando el motor ^(84 MB, una sola vez^)...
   powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue';Invoke-WebRequest '%RAW%/ZonaMuerta.exe' -OutFile godot\ZonaMuerta.exe"
