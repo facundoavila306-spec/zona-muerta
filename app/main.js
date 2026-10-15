@@ -14,7 +14,7 @@ ipcMain.handle('zm-update',async()=>{
   let sha;try{const r=await net.fetch('https://api.github.com/repos/'+REPO+'/commits/main',{headers:{Accept:'application/vnd.github.sha','User-Agent':'zona-muerta'}});if(!r.ok)throw 0;sha=(await r.text()).trim()}catch(e){return{ok:0,msg:'No hay conexión con GitHub'}}
   if(sha&&sha===localV())return{ok:1,msg:'Ya tenés la última versión'};
   if(process.platform!=='win32')return{ok:0,msg:'Actualización solo en Windows'};
-  const ps="$ProgressPreference='SilentlyContinue';$t=Join-Path $env:TEMP 'zm_upd';if(Test-Path $t){Remove-Item $t -Recurse -Force};New-Item -ItemType Directory $t|Out-Null;Invoke-WebRequest 'https://github.com/"+REPO+"/archive/refs/heads/main.zip' -OutFile \"$t\\j.zip\";Expand-Archive \"$t\\j.zip\" -DestinationPath $t -Force;robocopy \"$t\\zona-muerta-main\\app\" \"$env:ZMAPP\" /E /XF manifest.js version.txt /NFL /NDL /NJH /NJS|Out-Null;Remove-Item $t -Recurse -Force;exit 0";
+  const ps="$ProgressPreference='SilentlyContinue';$t=Join-Path $env:TEMP 'zm_upd';if(Test-Path $t){Remove-Item $t -Recurse -Force};New-Item -ItemType Directory $t|Out-Null;Invoke-WebRequest 'https://github.com/"+REPO+"/archive/refs/heads/main.zip' -OutFile \"$t\\j.zip\";Expand-Archive \"$t\\j.zip\" -DestinationPath $t -Force;robocopy \"$t\\zona-muerta-main\\app\" \"$env:ZMAPP\" /E /XF version.txt /NFL /NDL /NJH /NJS|Out-Null;Remove-Item $t -Recurse -Force;exit 0";
   const ok=await new Promise(res=>cp.execFile('powershell',['-NoProfile','-Command',ps],{env:Object.assign({},process.env,{ZMAPP:__dirname}),timeout:300000},err=>res(!err)));
   if(!ok)return{ok:0,msg:'Falló la descarga, probá de nuevo'};
   try{fs.writeFileSync(VF,sha)}catch(e){}

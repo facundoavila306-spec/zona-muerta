@@ -15,8 +15,7 @@ powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue';try{Invok
 if errorlevel 1 (
  echo No se pudo actualizar, uso la version instalada.
 ) else (
- robocopy "_tmp\zona-muerta-main\app" "motor\resources\app" /E /XF manifest.js /NFL /NDL /NJH /NJS >nul
- if not exist motor\resources\app\game\assets\manifest.js copy "_tmp\zona-muerta-main\app\game\assets\manifest.js" "motor\resources\app\game\assets\manifest.js" >nul
+ robocopy "_tmp\zona-muerta-main\app" "motor\resources\app" /E /NFL /NDL /NJH /NJS >nul
  rmdir /s /q _tmp
 )
 if not exist motor\resources\app\main.js (echo Falta el juego. Revisa tu internet y volve a ejecutar. & pause & exit /b 1)

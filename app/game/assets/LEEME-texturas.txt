@@ -1,7 +1,7 @@
 TEXTURAS PROPIAS (se cargan desde carpetas, sin tocar el juego)
 ================================================================
 1) Poné tus imágenes (jpg o png, idealmente 512x512 o 1024x1024, que se repitan bien) en esta carpeta "tex".
-2) Abrí manifest.js y escribí qué material reemplaza cada imagen. Ejemplo:
+2) Abrí catalogo.js y escribí qué material reemplaza cada imagen. Ejemplo:
 
 const ASSETS={tex:{
   "bldg":   {f:"tex/fachada.jpg",   size:4},   // paredes de edificios (size = metros por repetición)
@@ -18,4 +18,4 @@ const ASSETS={tex:{
    car1..car4 (autos) · tileW · tilePB (azulejos) · gchair · brass
 
 4) Guardá y abrí el juego con JUGAR.bat. Si una imagen no carga, el juego usa la textura de siempre.
-   Esta carpeta NO se pisa con las actualizaciones (solo se copia manifest.js si no existe).
+   El catalogo.js lo mantiene el juego (se actualiza solo). Tus propias texturas pisan las del juego si usás los mismos nombres.

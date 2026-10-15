@@ -838,6 +838,10 @@ function openTrade(R){TRADER=R||CITY.refuge;tradeRender();document.getElementByI
 function tradeBuy(i){const t=TRADE_ITEMS[i];if(!t)return;if((P.chapas|0)<t.p){tradeRender('Te faltan chapas, pibe.');return}P.chapas-=t.p;t.f();AU.pick&&AU.pick();tradeRender('Hecho. ¿Algo más?')}
 function mapRefuge(g,X,Y,sc){for(const R of CITY.refuges||[]){const rr=Math.max(14,22*sc*1.6);g.strokeStyle='#e8a33a';g.lineWidth=3;g.fillStyle='#e8a33a55';g.beginPath();g.arc(X(R.x),Y(R.z),rr,0,6.3);g.fill();g.stroke();g.fillStyle='#fff';g.font='bold 14px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#0a1018';g.strokeText(R.name,X(R.x),Y(R.z)-rr-4);g.fillText(R.name,X(R.x),Y(R.z)-rr-4)}}
 function refugeUpdate(dt){const R0=CITY.refuge;if(!R0||!LVL||!LVL.city||S!=='play')return;
+ // v27.10 el refugio es intocable: ninguna criatura (aunque vuele, salte o aparezca) puede estar dentro del patio
+ for(const R of CITY.refuges){if(Math.abs(P.x-R.x)>70||Math.abs(P.z-R.z)>70)continue;for(const z of zs){if(z.state==='dead')continue;
+  if(Math.abs(z.x-R.x)<13.4&&z.z>R.z-17.6&&z.z<R.z+14.4){const dW=z.x-(R.x-13.4),dE=(R.x+13.4)-z.x,dN=z.z-(R.z-17.6),dS=(R.z+14.4)-z.z,m=Math.min(dW,dE,dN,dS);
+   if(m===dN)z.z=R.z-17.9;else if(m===dS)z.z=R.z+14.7;else if(m===dW)z.x=R.x-13.7;else z.x=R.x+13.7;if(z.state==='chase'&&z.stag<=0)z.stag=.2}}}
  if(!HINT1&&time>14){HINT1=1;msg('Hay refugios con comercio, pedidos y descanso: el más cercano es '+(()=>{let b=null,bd=1e9;for(const R of CITY.refuges){const d=Math.hypot(R.x-P.x,R.z-P.z);if(d<bd){bd=d;b=R}}return b.name+' ('+(bd|0)+' m)'})()+'. Están en el mapa (M).',8)}
  GCD-=dt;if(GCD>0)return;GCD=.45;
  for(const R of CITY.refuges){if(Math.hypot(R.x-P.x,R.z-P.z)>110)continue;
@@ -2831,7 +2835,7 @@ let last=performance.now(),fpsA=0,fpsN=0,fpsT=0,hudN=0,stepT=0,hbT=0;
 function update(dt){
  if(CARD){return}if(P.hitstop>0){P.hitstop-=dt;dt*=.12}time+=dt;if(P.face>0){P.face-=dt;P.hp-=4*dt;P.faceT=(P.faceT||0)+dt;if(P.hp<=0){P.hp=0;P.face=0}const fv=document.getElementById('face');if(fv){fv.style.opacity=Math.min(1,P.face*2);fv.style.transform='scale('+(1+Math.sin(P.faceT*9)*.03)+') rotate('+(Math.sin(P.faceT*5)*2)+'deg)'}}else{const fv=document.getElementById('face');if(fv&&fv.style.opacity!=='0')fv.style.opacity=0}if(typeof refugeUpdate==='function')refugeUpdate(dt);if(typeof needsUpdate==='function'&&LVL&&LVL.city)needsUpdate(dt);P.t+=dt;
  // puertas y compuerta
- for(const d of DOORS){if(d.mev&&d.mev.ref&&d.tgt===1&&Math.hypot((d.cx+.5)*CS-P.x,(d.cy+.5)*CS-P.z)>5){d.tgt=0;if(d.draw)AU.door&&AU.door((d.cx+.5)*CS,(d.cy+.5)*CS)}d.open=clamp(d.open+(d.tgt-d.open)*Math.min(1,dt*2.2)+Math.sign(d.tgt-d.open)*dt*.35,0,1)}
+ for(const d of DOORS){if(d.mev&&d.mev.ref&&d.tgt===1&&Math.hypot((d.cx+.5)*CS-P.x,(d.cy+.5)*CS-P.z)>2.8){d.tgt=0;if(d.draw)AU.door&&AU.door((d.cx+.5)*CS,(d.cy+.5)*CS)}d.open=clamp(d.open+(d.tgt-d.open)*Math.min(1,dt*2.2)+Math.sign(d.tgt-d.open)*dt*.35,0,1)}
  gate.open=clamp(gate.open+Math.sign(gate.tgt-gate.open)*dt*.33,0,1);
  if(P.hp>0){
   // movimiento
@@ -3434,5 +3438,5 @@ requestAnimationFrame(frame);
 </script>
 <script src="data/mevdata.js"></script>
 <script src="data/mapa.js"></script>
-<script src="assets/manifest.js" onerror="void 0"></script>
+<script src="assets/catalogo.js" onerror="void 0"></script>
 <script>requestAnimationFrame(()=>setTimeout(()=>{const e=document.createElement('script');e.text=document.getElementById('zmain').textContent;document.head.appendChild(e)},60))</script></body></html>
