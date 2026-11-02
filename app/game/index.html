@@ -3364,7 +3364,7 @@ loadMevTextures();newGame();
 // ====================================================== MENÚ PRINCIPAL / PAUSA / CONFIGURACIÓN / GUARDAR (v24.7)
 let ZSENS=1;
 const ZM=(()=>{
- const CFG={sens:1,vol:.85,fps:true,who:'Facundo'};try{Object.assign(CFG,JSON.parse(localStorage.getItem('zmCFG')||'{}'))}catch(e){}
+ const CFG={sens:1,vol:.85,fps:true,who:'Facundo',mapa:'hospital'};try{Object.assign(CFG,JSON.parse(localStorage.getItem('zmCFG')||'{}'))}catch(e){}
  const saveCfg=()=>{try{localStorage.setItem('zmCFG',JSON.stringify(CFG))}catch(e){}};
  const apply=()=>{ZSENS=CFG.sens;if(AU&&AU.master)AU.master.gain.value=CFG.vol;const f=$('fps');if(f)f.style.display=CFG.fps?'':'none'};
  const SK='zmSave1';const getSave=()=>{try{return JSON.parse(localStorage.getItem(SK)||'null')}catch(e){return null}};
@@ -3391,7 +3391,7 @@ const ZM=(()=>{
  const fmt=t=>{const d=new Date(t);return d.toLocaleDateString()+' '+d.toLocaleTimeString().slice(0,5)};
  const KEYS='<div class="keys">WASD moverse · Shift correr · Espacio saltar / trepar · Click disparar · Click der. empujar<br>R recargar · F linterna · E usar · M mapa · TAB pedidos · Ruedita mira / cambiar arma · Esc pausa</div>';
  function render(msg){const sv=getSave();let h='';
-  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN CENTRO · EL GALLO McFLAY</div>`+B('play','JUGAR')+`<div class="row" style="grid-template-columns:150px 200px"><span>Personaje</span><button id="zm_who" style="font-size:15px;padding:4px 10px">${CFG.who} · ${(window.PROTA_INFO||{})[CFG.who]||''}</button></div>`+`<div class="row" style="grid-template-columns:150px 200px"><span>Escenario</span><button id="zm_map" style="font-size:15px;padding:4px 10px">${CFG.mapa==='prueba'?'Calle de prueba':'Ciudad (juego)'}</button></div>`+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
+  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN CENTRO · EL GALLO McFLAY</div>`+B('play','JUGAR')+`<div class="row" style="grid-template-columns:150px 200px"><span>Personaje</span><button id="zm_who" style="font-size:15px;padding:4px 10px">${CFG.who} · ${(window.PROTA_INFO||{})[CFG.who]||''}</button></div>`+`<div class="row" style="grid-template-columns:150px 200px"><span>Escenario</span><button id="zm_map" style="font-size:15px;padding:4px 10px">${CFG.mapa==='prueba'?'Calle de prueba':CFG.mapa==='ciudad'?'Ciudad (libre)':'Campaña · Hospital'}</button></div>`+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
   else if(panel==='pause'){h=`<h2>PAUSA</h2>`+B('cont','CONTINUAR')+B('save','GUARDAR')+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)}</div>`:'')+B('cfg','CONFIGURACIÓN')+B('menu','SALIR AL MENÚ')+((window.zm&&window.zm.update)?B('quit','SALIR DEL JUEGO'):'')}
   else if(panel==='cfg'){h=`<h2>CONFIGURACIÓN</h2>
    <div class="row"><span>Calidad gráfica</span><button id="zm_q" style="font-size:15px;padding:4px 10px">${QLV[QL].n}</button></div>
@@ -3404,7 +3404,7 @@ const ZM=(()=>{
   on('cont',resume);on('save',save);on('menu',toMenu);on('back',()=>{panel=prev;render()});
   on('q',()=>{QL=(QL+1)%QLV.length;try{localStorage.setItem('zmQL',QL)}catch(e){}render()});
   on('fps',()=>{CFG.fps=!CFG.fps;saveCfg();apply();render()});
-  on('map',()=>{CFG.mapa=CFG.mapa==='prueba'?'ciudad':'prueba';saveCfg();render()});
+  on('map',()=>{CFG.mapa=CFG.mapa==='hospital'?'ciudad':CFG.mapa==='ciudad'?'prueba':'hospital';saveCfg();render()});
   on('who',()=>{const L=['Facundo','Alma','Aurelio','Maxi'];CFG.who=L[(L.indexOf(CFG.who)+1)%4];saveCfg();render()});
   const sl=(id,k,lab,f)=>{const i=document.getElementById('zm_'+id);if(i)i.addEventListener('input',()=>{CFG[k]=+i.value;document.getElementById(lab).textContent=f(CFG[k]);saveCfg();apply()})};
   sl('sens','sens','zm_sv',v=>v.toFixed(2));sl('vol','vol','zm_vv',v=>Math.round(v*100)+'%');
@@ -3413,7 +3413,7 @@ const ZM=(()=>{
  function show(p,msg){panel=p;el.style.display='flex';$('ov').style.display='none';render(msg)}
  function hide(){el.style.display='none'}
  function lock(){if(!TEST)cv.requestPointerLock&&cv.requestPointerLock()}
- function play(){hide();S='menu';window.ZM_TEST=CFG.mapa==='prueba';P.who=CFG.who;start();P.chapas=0;if(typeof protaStart==='function')protaStart();apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
+ function play(){hide();S='menu';window.ZM_TEST=CFG.mapa==='prueba';MODE=CFG.mapa==='ciudad'?6:0;LVLN=0;P.who=CFG.who;start();P.chapas=0;if(typeof protaStart==='function')protaStart();apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
  function resume(){hide();S='play';apply();lock()}
  function toMenu(){S='menu';document.exitPointerLock&&document.exitPointerLock();show('main')}
  function save(){if(!LVL||!LVL.city){render('Solo se puede guardar en la ciudad');return}
