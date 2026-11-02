@@ -541,7 +541,8 @@ function interpLine(a,z){if(z<=a[0][1])return a[0][0];for(let i=0;i<a.length-1;i
 function cityLot(){return null}
 // Mapa congelado: la ciudad ya está generada (mapa-congelado.json). El generador original quedó en ciudad_gen.js.
 function buildCiudad(){const M=MAPA;CITY.lm=M.lm;CITY.spots=M.spots;CITY.corpses=M.corpses||[];CITY.fires=M.fires||[];CITY.wells=M.wells||[];CITY.refuges=M.refuges||(M.refuge?[M.refuge]:[]);CITY.refuge=CITY.refuges[0]||null;CITY.shops=M.shops.map(q=>({x:q[0],z:q[1]}));
- return{boxes:M.boxes.map(c=>({x0:c[0],y0:c[1],z0:c[2],x1:c[3],y1:c[4],z1:c[5],m:M.mats[c[6]],solid:!!c[7]})),floors:M.floors.map(f=>({x0:f[0],z0:f[1],x1:f[2],z1:f[3],m:f[4],y:f[5]})),lamps:M.lamps.map(l=>({x:l[0],z:l[1],t:l[2],c:l[3],I:l[4],R:l[5],y:l[6]})),picks:M.picks.map(q=>({t:q[0],x:q[1],z:q[2]})),signs:M.signs,doors:M.doors||[]}}
+ const fotoMat=m=>{const t=typeof m==='string'?m:(m&&m.t)||'';return t.startsWith('c_')||t.startsWith('p_r_')||t.startsWith('p_s_')};
+ return{boxes:M.boxes.filter(c=>!fotoMat(M.mats[c[6]])).map(c=>({x0:c[0],y0:c[1],z0:c[2],x1:c[3],y1:c[4],z1:c[5],m:M.mats[c[6]],solid:!!c[7]})),floors:M.floors.map(f=>({x0:f[0],z0:f[1],x1:f[2],z1:f[3],m:f[4],y:f[5]})),lamps:M.lamps.map(l=>({x:l[0],z:l[1],t:l[2],c:l[3],I:l[4],R:l[5],y:l[6]})),picks:M.picks.map(q=>({t:q[0],x:q[1],z:q[2]})),signs:M.signs,doors:M.doors||[]}}
 // autos por la calle (fuera de las manzanas), después de generar
 function cityCars(){}
 // ---------- carteles de esquina (texturas generadas con el nombre de la calle)
@@ -1102,8 +1103,7 @@ function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
   M.sofa(3.2,147.0,2,2.0,'maroon');M.armchair(6.4,146.6,2,'green');
   M.bed(9.3,146.6,2,'wood','blue');M.wardrobe(9.3,138.9,0,1.3,1.95,'wood');M.shelf(11.3,138.7,0,1.0,1.9,5,true);M.drawer(11.0,144.0,3,.6,.7);
   // ropa y calzado
-  M.flat(9.0,145.4,.73,'p_r_camisa',.55,.73,0);M.flat(9.7,145.2,.73,'p_r_jean',.35,.67,1);M.flat(8.4,140.6,.14,'p_r_campera',.6,.56,0);M.flat(9.4,140.8,.14,'p_r_buzo',.55,.54,0);M.flat(7.8,141.7,.14,'p_r_cargo',.35,.67,0);
-  M.shoe(10.4,140.2,.14,'p_s_zapa',.3,0);M.shoe(10.9,140.4,.14,'p_s_bota',.28,0);M.shoe(12.0,144.8,.14,'p_s_slip',.3,0);M.shoe(7.2,141.0,.14,'p_s_zapato',.3,0)}
+  /* v28: vidrieras con fotos de ropa sacadas (se veian mal) */}
  // faroles
  for(const z of[10,32,54,76,98])lamp(18.6,z);for(const z of[21,43,65,87,109])lamp(33.4,z);
  for(const[x,z]of[[16,116],[36,116],[40,136],[26,146]])lamp(x,z);
@@ -2817,7 +2817,7 @@ let ovMode='menu';
 function showOv(h,p,dead){const o=$('ov');o.style.display='flex';o.innerHTML=`<div><h1 style="${dead?'color:#c24a3a':''}">${h}</h1><p>${p}</p><div class="go">${dead?'R · REINTENTAR':'CLICK PARA SEGUIR'}</div></div>`}
 function msg(t,s){const m=$('msg');m.textContent=t;m.style.opacity=1;msgT=s||2.5}
 function newGame(){
- loadLevel(window.ZM_TEST?7:MODE===6?6:Math.max(0,Math.min(5,LVLN|0)));FD=new Int16Array(W*H).fill(-1);BQ=new Int32Array(W*H);fdN=0;if(VISOR){for(let x=51;x<=70;x++)for(let z=2;z<=13;z++)G[I(x,z)]=0;for(let i=PROPS.length-1;i>=0;i--)if(PROPS[i].x>=51){for(let j=0;j<PROPS[i].h;j++)for(let k=0;k<PROPS[i].w;k++)G[I(PROPS[i].x+k,PROPS[i].y+j)]=0;PROPS.splice(i,1)}}
+ loadLevel(window.ZM_LVL!=null?window.ZM_LVL:window.ZM_TEST?7:MODE===6?6:Math.max(0,Math.min(5,LVLN|0)));FD=new Int16Array(W*H).fill(-1);BQ=new Int32Array(W*H);fdN=0;if(VISOR){for(let x=51;x<=70;x++)for(let z=2;z<=13;z++)G[I(x,z)]=0;for(let i=PROPS.length-1;i>=0;i--)if(PROPS[i].x>=51){for(let j=0;j<PROPS[i].h;j++)for(let k=0;k<PROPS[i].w;k++)G[I(PROPS[i].x+k,PROPS[i].y+j)]=0;PROPS.splice(i,1)}}
  buildStatic();
  zs=[];parts=[];tracers=[];decals=[];EV.s=0;EV.t=0;EV.wave=0;EV.tank=false;time=0;
  Object.assign(P,{x:START.x,z:START.z,y:0,vy:0,yaw:START.yaw,pitch:0,hp:100,mag:30,res:120,reload:0,fireT:0,shoveT:0,kick:0,heat:0,hurt:0,shake:0,mf:0,kills:0,inten:0,pvx:0,pvz:0,fl:true,regen:0,st:1,tired:0,sk:0,gnd:true,sprint:false});
