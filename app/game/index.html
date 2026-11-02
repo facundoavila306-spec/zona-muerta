@@ -653,7 +653,18 @@ function mapDraw(){if(!mapOpen||!LVL||!LVL.city)return;const c=MAPC,SC=.55;c.wid
  for(const c2 of COMPS){g.fillStyle='#8fd98a';g.beginPath();g.arc(X(c2.x),Y(c2.z),4,0,6.3);g.fill()}
  g.fillStyle='#ffd080';g.save();g.translate(X(P.x),Y(P.z));g.rotate(-P.yaw);g.beginPath();g.moveTo(0,-10);g.lineTo(7,8);g.lineTo(-7,8);g.closePath();g.fill();g.restore();
  g.fillStyle='#cfe3f5';g.font='bold 16px system-ui';g.textAlign='left';g.fillText('Neuquén · centro · '+dayClock(),14,24);g.font='12px system-ui';g.fillText('M cerrar · rojo: dónde buscar · verde: dónde entregar · '+MDONE+'/'+MISSIONS.length+' pedidos',14,c.height-10)}
-document.addEventListener('keydown',e=>{if(e.code==='KeyM'&&S==='play'&&LVL&&LVL.city){mapOpen=!mapOpen;MAPC.style.display=mapOpen?'block':'none';mapDraw()}});
+document.addEventListener('keydown',e=>{if(e.code==='KeyM'&&S==='play'&&LVL){mapOpen=!mapOpen;MAPC.style.display=mapOpen?'block':'none';if(LVL.city)mapDraw();else mapDrawNivel()}});
+// v28: mapa de los niveles cerrados (hospital, calle): celdas transitables, puertas, vos, llave, salida
+function mapDrawNivel(){if(!mapOpen||!LVL||LVL.city)return;const c=MAPC;let x0=W,x1=0,y0=H,y1=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=G[I(x,y)];if(v===0||v===3||v===4){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
+ if(x1<x0)return;const ww=x1-x0+1,hh=y1-y0+1,SC=Math.min(1200/ww,800/hh,6);c.width=Math.round(ww*SC)+24;c.height=Math.round(hh*SC)+60;const g=c.getContext('2d');g.fillStyle='#0a1018';g.fillRect(0,0,c.width,c.height);
+ const X=x=>12+(x-x0)*SC,Y=y=>48+(y1-y)*SC;const Xm=x=>X(x/CS),Ym=z=>Y(z/CS);
+ const ex=new Set();for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const v=G[I(x,y)];if(v!==0&&v!==3&&v!==4)continue;g.fillStyle=v===0?'#2c3a4a':v===3?'#c08a3a':'#c23a3a';g.fillRect(X(x),Y(y)-SC,SC+.6,SC+.6);
+  if(v===0&&LVL.exitM&&LVL.exitM((x+.5)*CS-OX,(y+.5)*CS-OZ)){g.fillStyle='#39b54a';g.fillRect(X(x),Y(y)-SC,SC+.6,SC+.6)}}
+ for(const p of PICKS){if(p.got)continue;const col=p.t==='k'?'#ffd23f':p.t==='m'?'#e8e8e8':'#8fb4ff';g.fillStyle=col;g.beginPath();g.arc(Xm(p.x),Ym(p.z),p.t==='k'?6:3.5,0,6.28);g.fill()}
+ if(typeof COMPS!=='undefined')for(const q of COMPS){if(!q||q.dead)continue;g.fillStyle='#7fe0a0';g.beginPath();g.arc(Xm(q.x),Ym(q.z),4,0,6.28);g.fill()}
+ g.save();g.translate(Xm(P.x),Ym(P.z));g.rotate(-P.yaw);g.fillStyle='#ff3b30';g.beginPath();g.moveTo(0,-9);g.lineTo(6,6);g.lineTo(-6,6);g.closePath();g.fill();g.restore();
+ g.fillStyle='#e8eef5';g.font='bold 16px system-ui,sans-serif';g.fillText(LVL.name,12,24);g.font='12px system-ui,sans-serif';g.fillStyle='#b8c4d0';g.fillText('Rojo: vos · Amarillo: llave · Verde: salida · Naranja: puertas · Rojo oscuro: puerta con llave',12,42)}
+
 // ---------- pedidos cortos: ir a un lugar, encontrar el objeto, llevarlo a destino
 const PLAZA_VAN={lm:'plaza',name:'la camioneta, en la plaza Ministro González'};
 const MDEFS=[
