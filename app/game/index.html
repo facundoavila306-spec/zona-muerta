@@ -829,6 +829,11 @@ function refugeInteract(){if(S!=='play'||CARD||!LVL||!LVL.city)return false;cons
 const TRADE_ITEMS=[
  {n:'Munición para todas las armas',p:30,f:()=>{for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&q.res!==Infinity)q.res=Math.min(d.res*2,q.res+d.mag*2)}}},
  {n:'Botiquín: vida completa',p:20,f:()=>{P.hp=100;P.poison=0}},
+ {n:'Bataan 71 (escopeta) + 14 cartuchos',p:40,f:()=>{WS.Bombeo.mag=WDAT.Bombeo.mag;WS.Bombeo.res=Math.min(WDAT.Bombeo.res,WS.Bombeo.res+14)}},
+ {n:'FMK-3 (subfusil) + 64 balas',p:45,f:()=>{WS.FMK3.mag=WDAT.FMK3.mag;WS.FMK3.res=Math.min(WDAT.FMK3.res,WS.FMK3.res+64)}},
+ {n:'Mauser 1909 (con mira) + 15 balas',p:50,f:()=>{WS.Rifle.mag=WDAT.Rifle.mag;WS.Rifle.res=Math.min(WDAT.Rifle.res,WS.Rifle.res+15)}},
+ {n:'FAL + 60 balas',p:70,f:()=>{WS.Fusil.mag=WDAT.Fusil.mag;WS.Fusil.res=Math.min(WDAT.Fusil.res,WS.Fusil.res+60)}},
+ {n:'Granada FMK-2 x2',p:30,f:()=>{WS.FMK2.res=Math.min(4,WS.FMK2.res+2)}},
  {n:'Molotov x2',p:25,f:()=>{WS.Molotov.res=Math.min(6,WS.Molotov.res+2)}},
  {n:'Bengala x2',p:10,f:()=>{WS.Bengala.res=Math.min(8,WS.Bengala.res+2)}},
  {n:'Ración y agua (comida y sed llenas)',p:8,f:()=>{P.hunger=100;P.thirst=100}}];
@@ -2879,28 +2884,84 @@ function update(dt){
  if(fadeT>0){fadeT-=dt;$('vig').style.background=fadeT>0?'rgba(0,0,0,'+Math.min(1,fadeT)+')':''}
 }
 
+// ====================================================== v28 · ARMAS DE MEV 3D: modelos con manos exportados de Cube (assets/armas/*.json), con textura y animación
+const ARMA_MODELO={Facon:'facon',Pistola:'bersa',Bombeo:'bataan',FMK3:'fmk3',Rifle:'mauser',Fusil:'fal',FMK2:'fmk2'};
+const ARMAS_MEV={};let ARMAQ=null,MUZ=null;
+const AVS=`#version 300 es
+layout(location=0) in vec3 a_p0;layout(location=1) in vec3 a_p1;layout(location=2) in vec3 a_n0;layout(location=3) in vec3 a_n1;layout(location=4) in vec2 a_uv;
+uniform mat4 u_vp;uniform mat4 u_m;uniform float u_t;uniform float u_layer;
+out vec3 v_wp;out vec3 v_n;out vec3 v_ln;out vec3 v_lp;out vec4 v_col;out vec4 v_par;out vec2 v_duv;
+void main(){vec3 p=mix(a_p0,a_p1,u_t);vec3 n=normalize(mix(a_n0,a_n1,u_t));vec4 wp=u_m*vec4(p,1.);v_wp=wp.xyz;v_n=normalize(mat3(u_m)*n);v_ln=n;v_lp=p;
+ v_col=vec4(1.);v_par=vec4(u_layer,1.,.025,2.);v_duv=a_uv;gl_Position=u_vp*wp;}`;
+const pArma=prog(AVS,FS);
+const U3={};for(const n of['u_vp','u_tex','u_sh','u_lvp','u_cam','u_fl','u_fdir','u_fcol','u_fcone','u_pp','u_pc','u_amb','u_fogd','u_time','u_fogc','u_m','u_t','u_layer'])U3[n]=gl.getUniformLocation(pArma,n);
+function armaMev(key){const nm=ARMA_MODELO[key];if(!nm)return null;let a=ARMAS_MEV[nm];if(a)return a.ok?a:null;
+ a=ARMAS_MEV[nm]={ok:false};fetch('assets/armas/'+nm+'.json').then(r=>r.json()).then(j=>{
+  const nv=j.nv,nf=j.nf,bin=atob(j.pos),i16=new Int16Array(new Uint8Array(bin.length).map((_,k)=>bin.charCodeAt(k)).buffer);
+  const pos=new Float32Array(i16.length);for(let k=0;k<i16.length;k++)pos[k]=i16[k]*.001;
+  const idx=new Uint16Array(j.idx),uv=new Float32Array(nv*2);for(let v=0;v<nv;v++){uv[v*2]=j.uv[v*2];uv[v*2+1]=1-j.uv[v*2+1]}
+  // grupos de vértices que comparten posición (cuadro 0) para normales suaves sin costuras
+  const grp=new Int32Array(nv),gm=new Map();for(let v=0;v<nv;v++){const k=i16[v*3]+','+i16[v*3+1]+','+i16[v*3+2];if(!gm.has(k))gm.set(k,gm.size);grp[v]=gm.get(k)}
+  const nrm=new Float32Array(pos.length),acc=new Float32Array(gm.size*3);
+  for(let f=0;f<nf;f++){const o=f*nv*3;acc.fill(0);
+   for(let t=0;t<idx.length;t+=3){const a=idx[t],b=idx[t+1],c=idx[t+2];const ax=pos[o+a*3],ay=pos[o+a*3+1],az=pos[o+a*3+2];
+    const ux=pos[o+b*3]-ax,uy=pos[o+b*3+1]-ay,uz=pos[o+b*3+2]-az,vx=pos[o+c*3]-ax,vy=pos[o+c*3+1]-ay,vz=pos[o+c*3+2]-az;
+    const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;for(const q of[a,b,c]){const g=grp[q]*3;acc[g]+=nx;acc[g+1]+=ny;acc[g+2]+=nz}}
+   for(let v=0;v<nv;v++){const g=grp[v]*3,l=Math.hypot(acc[g],acc[g+1],acc[g+2])||1;nrm[o+v*3]=acc[g]/l;nrm[o+v*3+1]=acc[g+1]/l;nrm[o+v*3+2]=acc[g+2]/l}}
+  const mk=(d,T)=>{const b=gl.createBuffer();gl.bindBuffer(T||gl.ARRAY_BUFFER,b);gl.bufferData(T||gl.ARRAY_BUFFER,d,gl.STATIC_DRAW);return b};
+  const vao0=gl.getParameter(gl.VERTEX_ARRAY_BINDING);gl.bindVertexArray(null);a.bp=mk(pos);a.bn=mk(nrm);a.buv=mk(uv);a.bi=mk(idx,gl.ELEMENT_ARRAY_BUFFER);gl.bindBuffer(gl.ARRAY_BUFFER,null);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,null);gl.bindVertexArray(vao0);
+  a.nv=nv;a.nf=nf;a.ni=idx.length;a.anims=j.anims;a.trans=j.trans;a.boca=j.boca;a.layer=(MLAY['a_'+nm]||{}).layer||0;a.ok=true}).catch(e=>console.warn('arma',nm,e));
+ return null}
+// cuadro de animación: idle en bucle, shoot una vez desde WAT=0
+function armaCuadro(a,anim,t){const A=a.anims[anim]||a.anims.idle,s=A[0],n=A[1],fps=A[2];
+ if(anim==='idle'){const f=(t*fps)%n;const i=Math.floor(f);return[s+i,s+(i+1)%n,f-i]}
+ const f=Math.min(n-1.001,t*fps);const i=Math.floor(f);return[s+i,s+Math.min(n-1,i+1),f-i]}
+const FSDBG=`#version 300 es
+precision highp float;precision highp sampler2DArray;in vec3 v_wp;in vec3 v_n;in vec3 v_ln;in vec3 v_lp;in vec4 v_col;in vec4 v_par;in vec2 v_duv;uniform sampler2DArray u_tex;out vec4 o;
+void main(){if(v_par.y>5.)o=vec4(v_duv,0.,1.);else if(v_par.y>2.5)o=vec4(normalize(v_n)*.5+.5,1.);else o=vec4(texture(u_tex,vec3(v_duv,v_par.x)).rgb,1.);}`;
+const pArmaDbg=prog(AVS.replace('v_par=vec4(u_layer,1.,.025,2.)','v_par=vec4(u_layer,u_dbg,.025,2.)').replace('uniform float u_layer;','uniform float u_layer;uniform float u_dbg;'),FSDBG);
+const UD={};for(const n of['u_vp','u_tex','u_m','u_t','u_layer','u_dbg'])UD[n]=gl.getUniformLocation(pArmaDbg,n);
+function drawArma(){if(!ARMAQ)return;const{a,M,f0,f1,t}=ARMAQ;
+ if(window.DBG){gl.useProgram(pArmaDbg);gl.uniformMatrix4fv(UD.u_vp,false,VPM);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D_ARRAY,texA);gl.uniform1i(UD.u_tex,0);gl.uniformMatrix4fv(UD.u_m,false,M);gl.uniform1f(UD.u_t,t);gl.uniform1f(UD.u_layer,a.layer);gl.uniform1f(UD.u_dbg,window.DBG)}
+ else{gl.uniformMatrix4fv(U3.u_m,false,M);gl.uniform1f(U3.u_t,t);gl.uniform1f(U3.u_layer,a.layer);}
+ if(!a.vao)a.vao=gl.createVertexArray();gl.bindVertexArray(a.vao);const st=a.nv*12;gl.bindBuffer(gl.ARRAY_BUFFER,a.bp);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,f0*st);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,0,f1*st);
+ gl.bindBuffer(gl.ARRAY_BUFFER,a.bn);gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,3,gl.FLOAT,false,0,f0*st);gl.enableVertexAttribArray(3);gl.vertexAttribPointer(3,3,gl.FLOAT,false,0,f1*st);
+ gl.bindBuffer(gl.ARRAY_BUFFER,a.buv);gl.enableVertexAttribArray(4);gl.vertexAttribPointer(4,2,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,a.bi);gl.disable(gl.CULL_FACE);gl.drawElements(gl.TRIANGLES,a.ni,gl.UNSIGNED_SHORT,0);gl.enable(gl.CULL_FACE);
+ gl.bindVertexArray(null);gl.bindBuffer(gl.ARRAY_BUFFER,null);ARMAQ=null}
+// granada FMK-2: explosión con daño por radio (también la usan los capturados: ULTEXP)
+let ULTEXP={x:0,z:0,t:-99};
+function explotar(x,y,z,rad,dmg){ULTEXP={x,z,t:time};P.shake=Math.max(P.shake,1.2);AU.noise(.9,'lowpass',900,120,1.2,0,.5);AU.tone(60,30,.5,'sine',.9,0,.3);noise(x,z,60);
+ for(const zz of zs){if(zz.state==='dead'||zz.hidden)continue;const d=Math.hypot(zz.x-x,zz.z-z);if(d>rad)continue;const k=1-d/rad;const dx=(zz.x-x)/(d||1),dz=(zz.z-z)/(d||1);
+  hurtZ(zz,dmg*(.35+.65*k)*(zz.tank?.7:1),false,dx,dz,zz.x,1.2,zz.z);if(!zz.tank&&zz.state!=='dead'){zz.vx+=dx*6*k;zz.vz+=dz*6*k;zz.stag=Math.max(zz.stag,.6)}}
+ if(P.hp>0){const d=Math.hypot(P.x-x,P.z-z);if(d<rad*.75)hurtP(Math.round(60*(1-d/(rad*.75))),x,z)}
+ for(let k=0;k<70;k++){const a=R()*6.28,sp=2+R()*9;parts.push({x,y:y+.2,z,vx:Math.cos(a)*sp,vy:1+R()*7,vz:Math.sin(a)*sp,life:.4+R()*.9,sz:.05+R()*.09,c:k<30?[1,.55+R()*.3,.1]:[.2,.18,.16],e:k<30?3:0,g:.5})}
+ decals.push({m:decalM(x,.012,z,2.2,.01,2.2,R()*6),layer:7,c:[.08,.07,.06]});if(decals.length>200)decals.shift()}
 // ====================================================== ARMAS: las 11 del generador, en primera persona
 // kind gun: mag, res (reserva; Infinity en la pistola), dmg, rate, auto, pellets, spread, rl (s de recarga), hx (mult. cabeza)
 const WDAT={
- Pistola: {k:'gun',key:'1',mag:12,res:Infinity,dmg:20,rate:.22,auto:0,spread:.028,rl:1.9,hx:2.2,noise:26,rec:.004,pos:[-.16,-.17,.40],fa:1},
+ Facon:   {k:'melee',key:'1',auto:1,dmg:70,rate:.24,reach:2.6,arc:1.6,sw:.45,pos:[-.12,-.16,.4]},
+ Pistola: {k:'gun',key:'2',mag:15,res:Infinity,dmg:20,rate:.2,auto:0,spread:.028,rl:1.9,hx:2.2,noise:26,rec:.004,pos:[-.12,-.13,.38],fa:1},
+ FMK3:    {k:'gun',key:'4',mag:32,res:160,dmg:22,rate:1/10,auto:1,spread:.022,rl:2.4,hx:2.4,noise:30,rec:.0035,pos:[-.1,-.15,.28],rot:[0,.06,0],sc:.75,fa:1.5},
+ FMK2:    {k:'throw',key:'7',n:2,rate:1.4,pos:[-.12,-.14,.38]},
  Revolver:{k:'gun',key:'2',mag:6,res:30,dmg:95,rate:.38,pen:1,auto:0,spread:.008,rl:3.2,hx:2.5,noise:32,rec:.012,pos:[-.16,-.17,.40],fa:1.3},
- Bombeo:  {k:'gun',key:'3',mag:6,res:30,dmg:20,rate:.72,auto:0,pellets:12,spread:.1,pen:2,kb:1.4,rl:3.0,hx:1.6,noise:40,rec:.016,pos:[-.14,-.19,.36],fa:1.4},
+ Bombeo:  {k:'gun',key:'3',mag:7,res:30,dmg:20,rate:.72,auto:0,pellets:12,spread:.1,pen:2,kb:1.4,rl:3.0,hx:1.6,noise:40,rec:.016,pos:[-.09,-.15,.26],rot:[0,.06,0],sc:.7,fa:1.4},
  Recortada:{k:'gun',key:'4',mag:2,res:20,dmg:20,rate:.28,auto:0,pellets:14,spread:.15,pen:2,kb:1.8,rl:2.6,hx:1.5,noise:42,rec:.022,pos:[-.14,-.18,.34],fa:1.6},
- Fusil:   {k:'gun',key:'5',mag:20,res:120,dmg:34,rate:1/11,pen:1,auto:1,spread:.012,rl:2.9,hx:3,noise:34,rec:.0055,pos:[-.13,-.19,.34],fa:1.8},
- Rifle:   {k:'gun',key:'6',mag:5,res:30,dmg:190,rate:1.0,pen:3,auto:0,spread:.003,rl:3.4,hx:3,noise:38,rec:.02,pos:[-.13,-.19,.36],fa:2.4},
+ Fusil:   {k:'gun',key:'6',mag:20,res:120,dmg:34,rate:1/11,pen:1,auto:1,spread:.012,rl:2.9,hx:3,noise:34,rec:.0055,pos:[-.09,-.16,.26],rot:[0,.07,0],sc:.6,fa:1.8},
+ Rifle:   {k:'gun',key:'5',mag:5,res:30,dmg:190,rate:1.0,pen:3,auto:0,spread:.003,rl:3.4,hx:3,noise:38,rec:.02,pos:[-.09,-.16,.26],rot:[0,.07,0],sc:.6,fa:2.4},
  Stillson:{k:'melee',key:'7',auto:1,dmg:75,rate:.27,reach:3.2,arc:1.75,sw:.5,pos:[-.2,-.28,.32]},
  Cano:    {k:'melee',key:'8',auto:1,dmg:58,rate:.21,reach:3.4,arc:1.8,sw:.4,pos:[-.2,-.3,.3]},
  Hacha:   {k:'melee',key:'9',auto:1,dmg:140,rate:.32,reach:3.1,arc:1.7,sw:.55,pos:[-.2,-.3,.3]},
- Molotov: {k:'throw',key:'0',n:4,rate:1.2,pos:[-.2,-.22,.36]},
- Bengala: {k:'throw',key:'KeyG',n:3,rate:1.0,pos:[-.2,-.22,.36]}};
-const WORDER=['Pistola','Revolver','Bombeo','Recortada','Fusil','Rifle','Stillson','Cano','Hacha','Molotov','Bengala'];
-const WNAME={Pistola:'Pistola 9 mm',Revolver:'Revólver .38',Bombeo:'Escopeta de bombeo',Recortada:'Recortada',Fusil:'FAL',Rifle:'Rifle con mira',Stillson:'Llave Stillson',Cano:'Caño',Hacha:'Hacha',Molotov:'Molotov',Bengala:'Bengala'};
+ Molotov: {k:'throw',key:'8',n:4,rate:1.2,pos:[-.2,-.22,.36]},
+ Bengala: {k:'throw',key:'9',n:3,rate:1.0,pos:[-.2,-.22,.36]}};
+const WORDER=['Facon','Pistola','Bombeo','FMK3','Rifle','Fusil','FMK2','Molotov','Bengala'];   // v28: arsenal argentino (modelos de MEV 3D); Revolver/Recortada/Stillson/Cano/Hacha quedan para los NPC
+const WNAME={Facon:'Facón',Pistola:'Bersa Thunder 9',Revolver:'Revólver .38',Bombeo:'Bataan 71',Recortada:'Recortada',FMK3:'FMK-3',Fusil:'FAL',Rifle:'Mauser 1909',FMK2:'Granada FMK-2',Stillson:'Llave Stillson',Cano:'Caño',Hacha:'Hacha',Molotov:'Molotov',Bengala:'Bengala'};
 const WS={};for(const n of WORDER){const d=WDAT[n];WS[n]={mag:d.mag||0,res:d.k==='throw'?d.n:(d.res||0)}}
-let WCOMBO=0,WI=4,WANIM='idle',WAT=0,WCD=0,WRL=0,WSWT=0;   // arma actual (índice en WORDER), animación y tiempos
+let WCOMBO=0,WI=1,WANIM='idle',WAT=0,WCD=0,WRL=0,WSWT=0;   // arma actual (índice en WORDER), animación y tiempos
 const WMODELS={};function wModel(n){if(WMODELS[n])return WMODELS[n];GEN.setQ(GEN.QS.hi);const w=GEN.WDEFS[n]();w.J.root.t=[0,0,0];w.J.root.rest=[0,0,0];w.tpl=charTplObj(w);GEN.setQ(PS1);return WMODELS[n]=w}
 const FIRES=[],FLARES=[],THROWS=[];
 function wCur(){return WORDER[WI]}
-function wAllowed(i){const n=WORDER[i],d=WDAT[n],s=WS[n];if(d.k==='melee')return!P.melee||n===P.melee;if(d.k==='gun')return s.res===Infinity||s.mag+s.res>0;return s.res>0}
+function wAllowed(i){const n=WORDER[i],d=WDAT[n],s=WS[n];if(d.k==='melee')return n==='Facon'||!P.melee||n===P.melee;if(d.k==='gun')return s.res===Infinity||s.mag+s.res>0;return s.res>0}
 function wSel(i){if(i===WI||WRL>0)return;if(!wAllowed(i)){AU.click();msg(WDAT[WORDER[i]].k==='melee'?'No tenés esa arma':'Sin munición para '+WNAME[WORDER[i]],1.2);return}P.scope=0;WI=i;WANIM='idle';WAT=0;WCD=.3;AU.click();msg(WNAME[wCur()],1)}
 function wReload(){const n=wCur(),d=WDAT[n],s=WS[n];if(d.k!=='gun'||WRL>0||s.mag>=d.mag||s.res<=0)return;P.scope=0;WRL=d.rl*(P.who==='Maxi'?.75:1);WANIM='reload';WAT=0;AU.reload(0);
  setTimeout(()=>AU.reload(1),d.rl*450);setTimeout(()=>AU.reload(2),d.rl*800)}
@@ -2934,6 +2995,10 @@ function throwsUpdate(dt){zFireUpdate(dt);if(P.poison>0&&P.hp>0){P.poison-=dt;P.
  for(let i=THROWS.length-1;i>=0;i--){const q=THROWS[i];q.t+=dt;q.vy-=(q.kind==='Veneno'?4:9.8)*dt;const nx=q.x+q.vx*dt,ny=q.y+q.vy*dt,nz=q.z+q.vz*dt;
   if((q.kind==='Veneno'||q.kind==='Acido')&&Math.hypot(q.x-P.x,q.z-P.z)>1.8){for(let k=0;k<2;k++)parts.push({x:q.x+(R()-.5)*.12,y:q.y+(R()-.5)*.12,z:q.z+(R()-.5)*.12,vx:-q.vx*.05,vy:-.2,vz:-q.vz*.05,life:.35,sz:q.kind==='Veneno'?.045:.04,c:[.78,1,.12],e:2.2,g:.2})}
   if(q.kind==='Veneno'&&P.hp>0&&Math.hypot(nx-P.x,nz-P.z)<.55&&ny>P.y&&ny<P.y+1.95){THROWS.splice(i,1);hurtP(9,q.x,q.z);P.poison=4.5;msg('¡Ácido! Te está quemando',2);continue}
+  if(q.kind==='FMK2'){if(q.t>2.3){THROWS.splice(i,1);explotar(q.x,q.y,q.z,5.5,190);continue}
+   if(R()<.5)parts.push({x:q.x,y:q.y,z:q.z,vx:0,vy:.3,vz:0,life:.4,sz:.025,c:[.6,.6,.6],e:.2,g:0});
+   const wl=solidAt(CXo(nx),CXo(nz));if(wl){q.vx*=-.35;q.vz*=-.35;q.vy*=.5}else{q.x=nx;q.z=nz}
+   if(ny<=.08){q.y=.08;q.vy=Math.abs(q.vy)>1.5?-q.vy*.35:0;q.vx*=.7;q.vz*=.7}else q.y=ny;continue}
   let zhit=false;if(q.kind==='Molotov'&&q.t>.08)for(const z of zs){if(z.state==='dead'||z.hidden)continue;if(Math.hypot(z.x-nx,z.z-nz)<z.r+.35&&ny<2.1){zhit=true;z.fireT=Math.max(z.fireT||0,8);break}}
   const wall=solidAt(CXo(nx),CXo(nz))||ny>WH-.05;if(wall||zhit||ny<=.08||q.t>6){const x=wall?q.x:nx,z=wall?q.z:nz;THROWS.splice(i,1);
    if(q.kind==='Molotov'){FIRES.push({x,z,t:10,r:3.0});AU.noise(.5,'lowpass',1800,300,.8,0,.4);AU.tone(90,40,.3,'sine',.5,0,.2);for(let k=0;k<40;k++)parts.push({x,y:.1,z,vx:(R()-.5)*7,vy:1+R()*4,vz:(R()-.5)*7,life:.5+R()*.8,sz:.05+R()*.06,c:[1,.5+R()*.3,.1],e:3,g:.4});noise(x,z,22)}
@@ -2965,19 +3030,25 @@ function wUpdate(dt){if(P.scope&&(wCur()!=='Rifle'||P.sprint||WRL>0||P.hp<=0))P.
  if(mdown&&S==='play'&&P.hp>0){const d=WDAT[wCur()];if(d.auto)wFire()}
  throwsUpdate(dt)}
 // modelo en primera persona
-function wQueue(){if(P.hp<=0||VISOR||P.scz>.5)return;const n=wCur(),d=WDAT[n],w=wModel(n);const ey=eyeY();
+function wQueue(){if(P.hp<=0||VISOR||P.scz>.5)return;const n=wCur(),d=WDAT[n],w=ARMA_MODELO[n]?null:wModel(n);const ey=eyeY();
  const bob=P.moving*Math.sin(P.bob)*.012,bobY=P.moving*Math.abs(Math.sin(P.bob))*.01;
  let [gx,gy,gz]=d.pos;gx+=bob;gy+=bobY;gz-=P.kick*.03;let rx=P.kick*.03,ry=0,rz=0;
  if(WRL>0){const r=1-WRL/d.rl,dip=Math.sin(Math.PI*r);gy-=dip*.08;rx+=dip*.4;ry=dip*.3}
  if(P.shoveT>.2){const q=(P.shoveT-.2)/.25,e=Math.sin(Math.PI*(1-q));gz+=e*.15;gx+=e*.08;ry-=e*.4;rx-=e*.2}
- if(d.k==='melee'){rx+=-1.15;ry+=.35;rz+=-.25;gy+=.12;
+ if(d.k==='melee'&&!ARMA_MODELO[n]){rx+=-1.15;ry+=.35;rz+=-.25;gy+=.12;
   if(WANIM==='swing'){const u=Math.min(1,WAT/d.sw),sg=WCOMBO?1:-1,p=u<.18?-(u/.18):u<.5?-1+2*((u-.18)/.32):1-(u-.5)/.5;gx+=sg*p*.3;gy+=-p*.17+.05;rz+=sg*p*.95;ry+=-sg*p*.55;rx+=(1-Math.abs(p))*.35;gz+=(1-Math.abs(p))*.14}}             // empuñada: el mango hacia abajo-adelante
- if(d.k==='throw'){rx+=-.6;ry+=.3;gy+=.1}
+ if(d.k==='throw'&&!ARMA_MODELO[n]){rx+=-.6;ry+=.3;gy+=.1}
  // animación propia del arma (retroceso, cargador, corredera, giro del molotov)
  let a=WANIM,t=WAT;if(d.k==='gun'&&a==='fire')t=WAT;if(d.k==='gun'&&a==='reload')t=(1-WRL/d.rl)*({Pistola:3.2,Revolver:4,Bombeo:3.4,Recortada:3.6,Fusil:3.6,Rifle:3.4}[n]||3.4);
- if(d.k==='melee'&&a==='swing')t=WAT/d.sw*({Stillson:1.6,Cano:1.4,Hacha:1.9}[n]);if(d.k==='throw'&&a==='use')t=.3+WAT*2.2;
- const M=GEN.mM(GEN.mT(P.x,ey,P.z),GEN.mM(GEN.mRY(P.yaw),GEN.mM(GEN.mRX(-P.pitch),GEN.mM(GEN.mT(gx+.1*(P.sk||0),gy-.2*(P.sk||0),gz-.06*(P.sk||0)),GEN.mM(GEN.mRY(ry),GEN.mM(GEN.mRX(rx),GEN.mRZ(rz)))))));
- w.rootM=M;GEN.wpose(w,a,t);queueChar(w,[1,1,1],true)}
+ if(d.k==='melee'&&a==='swing')t=WAT/d.sw*({Stillson:1.6,Cano:1.4,Hacha:1.9}[n]||1.5);if(d.k==='throw'&&a==='use')t=.3+WAT*2.2;
+ const M=GEN.mM(GEN.mT(P.x,ey,P.z),GEN.mM(GEN.mRY(P.yaw),GEN.mM(GEN.mRX(-P.pitch),GEN.mM(GEN.mT(gx+.1*(P.sk||0),gy-.2*(P.sk||0),gz-.06*(P.sk||0)),GEN.mM(GEN.mRY(ry),GEN.mM(GEN.mRX(rx),GEN.mM(GEN.mRZ(rz),GEN.mS(d.sc||1,d.sc||1,d.sc||1))))))));
+ if(d.rot){rx+=d.rot[0];ry+=d.rot[1];rz+=d.rot[2]}
+ const am=armaMev(n);if(am){let an='idle',ta=time;if(d.k==='gun'&&a==='fire'){an='shoot';ta=WAT*.8}else if(d.k==='melee'&&a==='swing'){an='shoot';ta=WAT*1.2}else if(d.k==='throw'&&a==='use'){an='shoot';ta=WAT}
+  const[f0,f1,ft]=armaCuadro(am,an,ta);ARMAQ={a:am,M,f0,f1,t:ft};
+  if(d.k==='gun'&&P.mf>0&&am.boca){const b=am.boca,wx=M[0]*b[0]+M[4]*b[1]+M[8]*b[2]+M[12],wy=M[1]*b[0]+M[5]*b[1]+M[9]*b[2]+M[13],wz=M[2]*b[0]+M[6]*b[1]+M[10]*b[2]+M[14];
+   for(let k=0;k<3;k++)parts.push({x:wx+(R()-.5)*.04,y:wy+(R()-.5)*.04,z:wz+(R()-.5)*.04,vx:0,vy:0,vz:0,life:.045,sz:.05+R()*.07,c:[1,.8,.35],e:4,g:0});MUZ=[wx,wy,wz]}
+  return}
+ if(!w)return;w.rootM=M;GEN.wpose(w,a,t);queueChar(w,[1,1,1],true)}
 function wHud(){const n=wCur(),d=WDAT[n],s=WS[n];const am=$('am'),ar=$('ar');
  if(d.k==='gun'){am.textContent=WRL>0?'—':s.mag;ar.textContent='/ '+(s.res===Infinity?'∞':s.res)}else if(d.k==='throw'){am.textContent='×'+s.res;ar.textContent=''}else{am.textContent='';ar.textContent=''}
  $('wname').textContent=WNAME[n]+'  ·  '+(WI+1)}
@@ -3243,7 +3314,7 @@ function mercLoad(a){if(!a)return;a.forEach((v,i)=>{const m=MERCS[i];if(!m)retur
 const PROTAS={Facundo:{w:'Hacha',wi:0,perk:'Puntería (dispersión -20%)'},Alma:{w:'Cano',wi:0,perk:'Resistencia (hambre y sed bajan 25% más lento)'},Aurelio:{w:'Stillson',wi:0,perk:'Fuerza (cuerpo a cuerpo +30%)'},Maxi:{w:'Cano',wi:0,perk:'Manos rápidas (recarga 25% más rápida)'}};
 window.PROTA_INFO={Facundo:'puntería',Alma:'resistencia',Aurelio:'fuerza',Maxi:'recarga rápida'};
 const PROTS=[];
-function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;P.melee=w.w;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&n!=='Pistola'){q.mag=0;q.res=0}if(d.k==='throw')q.res=0}WS.Pistola.mag=WDAT.Pistola.mag;WI=w.wi;msg('Jugás como '+P.who+'. Pistola y '+WNAME[w.w]+'. '+w.perk,6)}
+function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;P.melee=w.w;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&n!=='Pistola'){q.mag=0;q.res=0}if(d.k==='throw')q.res=0}WS.Pistola.mag=WDAT.Pistola.mag;WI=1;msg('Jugás como '+P.who+'. Facón y Bersa. '+w.perk,6)}
 function protaPlace(){PROTS.length=0;const RF=(CITY.refuges||[])[0];if(!RF)return;let k=0;for(const n of Object.keys(PROTAS)){if(n===(P.who||'Facundo'))continue;
  let c;try{c=GEN.armedChar(n,PROTAS[n].w)}catch(e){continue}c.tpl=charTplObj(c);c.wp.tpl=charTplObj(c.wp);
  PROTS.push({n,ch:c,x:RF.x+1.5+k*2.2,z:RF.z+3.6,yaw:Math.PI,t:R()*5});k++}}
@@ -3296,7 +3367,7 @@ function render(){
  persp(PM,(72+(P.sk||0)*10)*(1-(P.scz||0)*.78)*Math.PI/180,aspect,.06,90);lookDir(VM,P.x,ey,P.z,fx,fy,fz);mul(VPM,PM,VM);
  // luces puntuales: las 7 lamparas mas cercanas + fogonazo
  PPOS.fill(0);PCOL.fill(0);let n=0;
- if(P.mf>0){PPOS[0]=P.x+f[0]*.8;PPOS[1]=ey;PPOS[2]=P.z+f[2]*.8;PPOS[3]=10;PCOL[0]=6;PCOL[1]=3.6;PCOL[2]=1.5;n=1}
+ if(P.mf>0){PPOS[0]=MUZ?MUZ[0]:P.x+f[0]*.8;PPOS[1]=MUZ?MUZ[1]:ey;PPOS[2]=MUZ?MUZ[2]:P.z+f[2]*.8;PPOS[3]=10;PCOL[0]=6;PCOL[1]=3.6;PCOL[2]=1.5;n=1}
  const cand=[];fxLights(cand);for(const l of LAMPS){const e=l.t===3?(EV.s>=1&&EV.s<3?.5+.5*Math.sin(time*6):0):lampLight(l);if(e<=0)continue;cand.push([Math.hypot(l.x-P.x,l.z-P.z),l,e])}
  cand.sort((a,b)=>a[0]-b[0]);
  for(let i=0;i<cand.length&&n<8;i++){const[d,l,e]=cand[i];if(d>26)break;PPOS[n*4]=l.x;PPOS[n*4+1]=l.t===6?4.0:l.t===7?l.y:WH-.2;PPOS[n*4+2]=l.z;PPOS[n*4+3]=l.t===3?12:l.t===4?10:l.t===5?6:l.t===6?14:l.t===7?l.R:11;
@@ -3316,7 +3387,7 @@ function render(){
  gl.uniform4f(U.u_fl,fpx,fpy,fpz,(P.fl&&P.hp>0)?(15*(.97+.03*Math.sin(time*40))):0);gl.uniform3f(U.u_fdir,P.fx,P.fy,P.fz);gl.uniform3f(U.u_fcol,1,.95,.85);gl.uniform2f(U.u_fcone,Math.cos(36*Math.PI/180),Math.cos(13*Math.PI/180));
  gl.uniform4fv(U.u_pp,PPOS);gl.uniform3fv(U.u_pc,PCOL);{const k=LVL.city?dayLight():(LVL.dayk||0);gl.uniform3f(U.u_amb,LVL.amb[0]+k*.42,LVL.amb[1]+k*.43,LVL.amb[2]+k*.46);gl.uniform1f(U.u_fogd,LVL.fog||.03);gl.uniform1f(U.u_time,time%100);gl.uniform3f(U.u_fogc,.008+k*.42,.011+k*.52,.016+k*.7)}
  };setU(pMain,U);drawSB(QLV[QL].dd,true);DB.draw();FB.draw();setU(pChar,U2);drawChars(false);
- gl.clear(gl.DEPTH_BUFFER_BIT);setU(pChar,U2);drawChars(false,true);
+ gl.clear(gl.DEPTH_BUFFER_BIT);setU(pChar,U2);drawChars(false,true);setU(pArma,U3);drawArma();
 }
 function hud(){
  $('hpb').style.width=P.hp+'%';$('hpb').style.background=P.hp>60?'#6fb34a':P.hp>30?'#d6a12e':'#c0392b';$('hpt').textContent=Math.ceil(P.hp);{const h=$('hun'),w=$('thi');if(h){h.style.width=(P.hunger??100)+'%';w.style.width=(P.thirst??100)+'%'}}
@@ -3335,7 +3406,7 @@ function frame(now){
  buildDyn();render();visorLabels();if(!window.__rdy&&texReady&&preStep()&&++RDN>=4){window.__rdy=1;const l=$('ld');if(l)l.remove()}if(++hudN%3===0&&(S!=='menu'))hud()}
 
 // ====================================================== ENTRADA
-let PREQ=null,PREN=0;function preStep(){if(!PREQ){PREQ=[];for(const n of new Set(ZNAMES))for(const rs of[0,1,2])PREQ.push(()=>charTpl(n,rs));for(const n of Object.keys(SPDAT))PREQ.push(()=>charTpl(n,0));for(const n of WORDER)PREQ.push(()=>wModel(n));PREN=PREQ.length}
+let PREQ=null,PREN=0;function preStep(){if(!PREQ){PREQ=[];for(const n of new Set(ZNAMES))for(const rs of[0,1,2])PREQ.push(()=>charTpl(n,rs));for(const n of Object.keys(SPDAT))PREQ.push(()=>charTpl(n,0));for(const n of WORDER)PREQ.push(()=>ARMA_MODELO[n]?armaMev(n):wModel(n));PREN=PREQ.length}
  const t0=performance.now();while(PREQ.length&&performance.now()-t0<40){try{PREQ.shift()()}catch(e){console.warn('pre',e)}}
  const el=document.getElementById('ldt');if(el)el.textContent=PREQ.length?'PREPARANDO CRIATURAS Y ARMAS… '+Math.round(100*(PREN-PREQ.length)/PREN)+'%':'ÚLTIMOS DETALLES…';return !PREQ.length}
 let RDN=0;

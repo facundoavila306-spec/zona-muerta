@@ -1,5 +1,12 @@
 // Texturas propias: ver LEEME-texturas.txt. size = metros por repetición.
 const ASSETS={tex:{
+  "a_facon": {f:"tex/armas/facon.jpg", size:1},
+  "a_bersa": {f:"tex/armas/bersa.jpg", size:1},
+  "a_bataan": {f:"tex/armas/bataan.jpg", size:1},
+  "a_fmk3": {f:"tex/armas/fmk3.jpg", size:1},
+  "a_mauser": {f:"tex/armas/mauser.jpg", size:1},
+  "a_fal": {f:"tex/armas/fal.jpg", size:1},
+  "a_fmk2": {f:"tex/armas/fmk2.jpg", size:1},
   "bldg":   {f:"tex/fachada.jpg", size:4},
   "wallOut":{f:"tex/revoque.jpg", size:3},
   "asph":   {f:"tex/asfalto.jpg", size:3},
