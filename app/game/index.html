@@ -1125,6 +1125,91 @@ function buildCallePrueba(){const B=[],F=[],L=[],PK=[];
  for(const[x,z]of[[16,116],[36,116],[40,136],[26,146]])lamp(x,z);
  return{boxes:B,floors:F,lamps:L,picks:PK,signs:[],doors:[]}}
 
+// ====================================================== v28.1 · PLAYÓN DE VACA MUERTA: arena abierta de disparos (sin puertas, sin llaves, sin bichos)
+// Simétrica en x y en z (cuatro cuadrantes iguales + nave central). 140 × 100 m. Texturas CC0 (WRAD) en assets/tex/n.
+function buildPlayon(){const B=[],F=[],L=[],PK=[];const W_=140,D_=100,CX=70,CZ=50;
+ const box=(x0,y0,z0,x1,y1,z1,m,solid)=>B.push({x0,y0,z0,x1,y1,z1,m,solid:solid!==false});
+ const bx=(x0,y0,z0,x1,y1,z1,m,s)=>{box(x0,y0,z0,x1,y1,z1,m,s);box(W_-x1,y0,z0,W_-x0,y1,z1,m,s)};                       // espejo en x
+ const q4=(x0,y0,z0,x1,y1,z1,m,s)=>{bx(x0,y0,z0,x1,y1,z1,m,s);bx(x0,y0,D_-z1,x1,y1,D_-z0,m,s)};                          // cuatro cuadrantes
+ const floor=(x0,z0,x1,z1,m,y)=>F.push({x0,z0,x1,z1,m,y:y||0});
+ const fq=(x0,z0,x1,z1,m,y)=>{for(const[a,b]of[[x0,x1],[W_-x1,W_-x0]])for(const[c,d]of[[z0,z1],[D_-z1,D_-z0]])floor(a,c,b,d,m,y)};
+ const lampQ=(x,z,I,R)=>{for(const X of[x,W_-x])for(const Z of[z,D_-z])L.push({x:X,z:Z,t:6,c:[1,.86,.62],I:I||1.8,R:R||19,y:4.2})};
+ const glow=(x,z,y,c,I,R)=>L.push({x,z,t:7,c,I,R,y});
+ const MC=['n_cont_a','n_cont_b','n_cont_c','n_chapa_vieja','n_oxido'];
+ // contenedor marítimo 6,1 × 2,44 × 2,6 (esquina x0,z0). dir 'x' o 'z'. n = pisos apilados
+ const cont=(x0,z0,dir,mi,n,sym)=>{const lx=dir==='x'?6.1:2.44,lz=dir==='x'?2.44:6.1,f=sym?q4:box;
+  for(let k=0;k<(n||1);k++){const m=MC[(mi+k)%MC.length],y=k*2.6;f(x0,y,z0,x0+lx,y+2.6,z0+lz,m,true);
+   // viga superior y zócalo (da relieve)
+   f(x0-.04,y+2.52,z0-.04,x0+lx+.04,y+2.62,z0+lz+.04,'n_estructura',false);f(x0-.04,y,z0-.04,x0+lx+.04,y+.14,z0+lz+.04,'n_estructura',false)}};
+ const cq=(x0,z0,dir,mi,n)=>{const lx=dir==='x'?6.1:2.44,lz=dir==='x'?2.44:6.1;
+  for(const[ax,az]of[[0,0],[1,0],[0,1],[1,1]]){const X=ax?W_-x0-lx:x0,Z=az?D_-z0-lz:z0;cont(X,Z,dir,mi,n,false)}};
+ // barrera de hormigón (jersey) baja: cobertura que se salta
+ const jersey=(x0,z0,len,dir)=>{const lx=dir==='x'?len:.6,lz=dir==='x'?.6:len;q4(x0,0,z0,x0+lx,.9,z0+lz,'n_hormigon_liso',true);q4(x0-.1,0,z0-.1,x0+lx+.1,.3,z0+lz+.1,'n_hormigon_liso',true)};
+ const pallets=(x,z,n)=>{q4(x,0,z,x+1.2,.14,z+1.2,'n_tablas',true);for(let k=0;k<(n||1);k++)q4(x+.05,.14+k*.9,z+.05,x+1.15,.14+(k+1)*.9,z+1.15,k%2?'n_cajon_a':'n_cajon_b',true)};
+ // ---- pisos
+ floor(0,0,W_,D_,'n_schotter',-.02);
+ fq(1.2,1.2,69,10,'n_tierra',.0);                                      // franja de tierra pegada al muro
+ fq(2,26,34,47,'n_hormigon_manchado',.01);                               // patio de contenedores
+ fq(36,2,68,32,'n_hormigon_manchado',.01);
+ floor(1.2,44,W_-1.2,56,'n_bloques',.015);                               // calle principal este-oeste
+ fq(28,1.2,36,44,'n_bloques',.015);                                      // calles norte-sur
+ fq(2,36,16,64,'n_hormigon_liso',.012);                                  // plataforma de aparición (oeste/este)
+ floor(50,36,90,64,'n_hormigon_liso',.02);                               // piso de la nave
+ // ---- muro perimetral: hormigón con pilastras y remate de chapa
+ box(0,0,0,W_,5,1.2,'n_hormigon_agujeros',true);box(0,0,D_-1.2,W_,5,D_,'n_hormigon_agujeros',true);bx(0,0,0,1.2,5,D_,'n_hormigon_agujeros',true);
+ box(0,5,0,W_,5.35,1.2,'n_hormigon_liso',false);box(0,5,D_-1.2,W_,5.35,D_,'n_hormigon_liso',false);bx(0,5,0,1.2,5.35,D_,'n_hormigon_liso',false);
+ box(0,5.35,0,W_,6.6,.2,'n_chapa_ondulada',true);box(0,5.35,D_-.2,W_,6.6,D_,'n_chapa_ondulada',true);bx(0,5.35,0,.2,6.6,D_,'n_chapa_ondulada',true);
+ for(let x=10;x<CX;x+=10){q4(x-.3,0,1.2,x+.3,5,1.7,'n_hormigon_liso',false)}
+ for(let z=10;z<CZ;z+=10){q4(1.2,0,z-.3,1.7,5,z+.3,'n_hormigon_liso',false)}
+ // ---- NAVE CENTRAL (x 50–90, z 36–64): paredes con aberturas, techo, columnas, máquina central
+ for(const[a,b]of[[50,56],[61,67],[73,79],[84,90]]){box(a,0,36,b,6.4,36.4,'n_hormigon_manchado',true);box(a,0,63.6,b,6.4,64,'n_hormigon_manchado',true)}
+ for(const[a,b]of[[36,44],[56,64]]){bx(50,0,a,50.4,6.4,b,'n_hormigon_manchado',true)}
+ for(const x of[50,56,61,67,73,79,84,90])for(const z of[36,64])box(x-.3,0,z-.3,x+.3,7.2,z+.3,'n_hormigon_liso',true);
+ box(49.6,7,35.6,90.4,7.5,64.4,'n_chapa_ondulada',true);box(49.6,6.4,35.6,90.4,7,36,'n_hormigon_liso',false);box(49.6,6.4,64,90.4,7,64.4,'n_hormigon_liso',false);
+ for(const x of[52,61,70,79,88])for(const z of[44,56]){box(x-.3,0,z-.3,x+.3,7,z+.3,'n_estructura',x!==70)}
+ for(let x=55;x<=85;x+=10)box(x-.12,6.2,36.4,x+.12,7,63.6,'n_estructura',false);
+ // máquina central: compresor con tubos (tapa la línea de tiro de punta a punta)
+ box(63,0,45,77,3.4,55,'n_chapa_vieja',true);box(62.8,3.4,44.8,77.2,3.6,55.2,'n_estructura',false);box(66,3.6,47,74,5.4,53,'n_porton',true);
+ box(63,0,42,77,.9,43.2,'n_galvanizado',true);box(63,0,56.8,77,.9,58,'n_galvanizado',true);
+ for(const z of[46.5,53.5])box(60,1.4,z-.35,80,2.1,z+.35,'n_galvanizado',false);
+ // cajas y cobertura dentro de la nave
+ for(const[x,z]of[[54,40],[54,58.6],[86,40],[86,58.6],[58,48],[82,48],[58,52],[82,52]])pallets(x,z,x%2?2:1);
+ for(const x of[56,84])q4(x-1.6,0,38.4,x+1.6,1.1,39.4,'n_oxido',true);
+ // ---- ZONA DE APARICIÓN: tinglado abierto con barreras al frente
+ bx(3,0,42,3.5,3.6,58,'n_hormigon_agujeros',true);bx(3,3.6,41,14,4,59,'n_chapa_ondulada',true);
+ for(const z of[41.4,58.6])bx(3.2,0,z-.25,3.7,3.6,z+.25,'n_estructura',true);bx(13.4,0,41.4,13.9,3.6,41.9,'n_estructura',true);bx(13.4,0,58.1,13.9,3.6,58.6,'n_estructura',true);
+ for(const z of[44.5,55.5])bx(18,0,z,22,.9,z+.6,'n_hormigon_liso',true);
+ jersey(24,47.5,5,'x');q4(24,0,47.5+0,24+5,.9,48.1,'n_hormigon_liso',false);
+ // ---- CONTENEDORES (cada línea se repite en los cuatro cuadrantes)
+ cq(18,31,'x',0,1);cq(18,34.4,'x',1,1);cq(25.4,31,'x',2,2);cq(25.4,34.4,'x',3,1);          // bloque junto a la aparición
+ cq(5,16,'z',1,1);cq(8.6,20,'z',3,2);cq(5,24.5,'z',0,1);cq(12.5,10,'x',2,1);                // rincón norte (contra el muro)
+ cq(38,6,'z',4,1);cq(41.4,6,'z',0,2);cq(38,13.5,'z',2,1);cq(44.8,12,'z',1,1);               // bloque de pasillos angostos
+ cq(55,10,'x',3,2);cq(55,13.4,'x',0,1);cq(60.6,20,'z',1,1);cq(54,24,'x',4,1);                // frente a la nave
+ // ---- TUBERÍAS de superficie (se saltan) y castillete de caños
+ q4(14,0,29,27,.8,29.8,'n_galvanizado',true);q4(44,0,34,49,.8,34.8,'n_galvanizado',true);
+ q4(14,.8,28.8,14.5,1.1,30,'n_estructura',false);q4(26.5,.8,28.8,27,1.1,30,'n_estructura',false);
+ for(const z of[28,31]){q4(30,0,z-.1,36,.0,z+.1,'n_estructura',false)}
+ // pipe rack elevado (z 22): postes, vigas y caños
+ for(let x=40;x<=64;x+=6){q4(x-.2,0,21.4,x+.2,5.2,21.8,'n_estructura',true);q4(x-.2,0,24.2,x+.2,5.2,24.6,'n_estructura',true);q4(x-.2,4.6,21.4,x+.2,4.9,24.6,'n_estructura',false)}
+ q4(40,5,21.5,64.2,5.6,22.3,'n_galvanizado',false);q4(40,5,22.5,64.2,5.6,23.3,'n_chapa_vieja',false);q4(40,5,23.5,64.2,5.6,24.3,'n_galvanizado',false);
+ // tanque de almacenamiento (bloque grande)
+ q4(8,0,32,15,5.6,38,'n_galvanizado',true);q4(7.8,5.6,31.8,15.2,5.9,38.2,'n_estructura',false);q4(14.9,0,33,15.1,5.6,34,'n_estructura',false);
+ // ---- BOMBAS de petróleo (cabeza de caballo): base sólida + balancín
+ for(const[px,pz]of[[26,8],[66,7]]){q4(px-1.5,0,pz-.6,px+1.5,.5,pz+.6,'n_hormigon_liso',true);q4(px-.15,.5,pz-.15,px+.15,3.6,pz+.15,'n_porton',true);
+  q4(px-2.8,3.5,pz-.15,px+2.4,3.85,pz+.15,'n_oxido',false);q4(px+1.7,2.9,pz-.3,px+2.5,4.5,pz+.3,'n_oxido',false);q4(px-3.4,2.6,pz-.3,px-2.6,3.9,pz+.3,'n_estructura',false);q4(px-.9,.5,pz-.5,px+.9,1.6,pz+.5,'n_chapa_vieja',false)}
+ // ---- ANTORCHA de gas (Vaca Muerta): torre alta con llama
+ for(const x of[18,W_-18])for(const z of[16,D_-16])if(true){box(x-.25,0,z-.25,x+.25,16,z+.25,'n_estructura',true);box(x-.5,0,z-.5,x+.5,.6,z+.5,'n_hormigon_liso',true);glow(x,z,16.4,[1,.5,.16],2.6,26)}
+ // ---- cajas y tarimas sueltas
+ pallets(33,38,2);pallets(36.6,40.2,1);pallets(9,48,1);pallets(31,18,2);pallets(46,26,1);pallets(60,30,1);pallets(20,22,1);
+ // ---- postes de luz
+ lampQ(30,40);lampQ(30,12);lampQ(46,42);lampQ(46,20);lampQ(12,30);lampQ(60,28);lampQ(8,47);
+ for(const z of[50])for(const x of[10,130])L.push({x,z,t:7,c:[1,.9,.75],I:1.6,R:14,y:3.3});
+ for(const x of[52,61,70,79,88])for(const z of[40,60])L.push({x,z,t:7,c:[1,.93,.8],I:1.5,R:15,y:6.4});
+ // ---- recogibles: munición en rincones, botiquines en la nave
+ for(const[x,z]of[[10,30],[34,26],[46,44],[58,24],[8,10],[24,52]]){for(const X of[x,W_-x])for(const Z of[z,D_-z])PK.push({t:'a',x:X,z:Z})}
+ for(const[x,z]of[[56,46],[56,54],[84,46],[84,54],[70,40],[70,60]])PK.push({t:'m',x,z});
+ return{boxes:B,floors:F,lamps:L,picks:PK,signs:[],doors:[]}}
+
 // ====================================================== NIVELES: geometría exacta del hospital MEV (mevdata.js), celdas de 0,5 m
 const MV=MEVDATA;
 const MQ=(()=>{const bin=atob(MV.q);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return new Float32Array(u8.buffer)})();
@@ -1176,7 +1261,8 @@ const LVLDEF=[
  {name:'Neuquén · centro',Y:0,city:true,cs:.75,custom:()=>{const s=buildCiudad();cityCars(s);return s},ox:0,oz:0,W:0,H:0,amb:[.03,.034,.046],fog:.0065,
   start:CITY.start,base:CITY.base,
   exit:()=>false,obj0:'Ciudad libre. M abre el mapa. Los pedidos se cumplen llevando las cosas a la Municipalidad.',intro:'Capilla del Pozo, refugio. Ahora vas solo: en el patio podés contratar ayuda por 3 horas (E). Comerciante, mesa de pedidos y literas con E. M: mapa.',next:''},
- {name:'Calle de prueba',Y:0,custom:()=>buildCallePrueba(),ox:0,oz:0,W:208,H:608,amb:[.04,.046,.062],dayk:.9,fog:.008,start:[26,6,0],exit:()=>false,hordeAt:()=>false,obj0:'Calle de prueba: caminá y mirá todo (texturas, árboles, basura).',intro:'Calle de prueba. Zona A basura · B arboleda · C zona quemada · D plaza.',next:''}];
+ {name:'Calle de prueba',Y:0,custom:()=>buildCallePrueba(),ox:0,oz:0,W:208,H:608,amb:[.04,.046,.062],dayk:.9,fog:.008,start:[26,6,0],exit:()=>false,hordeAt:()=>false,obj0:'Calle de prueba: caminá y mirá todo (texturas, árboles, basura).',intro:'Calle de prueba. Zona A basura · B arboleda · C zona quemada · D plaza.',next:''},
+ {name:'Playón de Vaca Muerta',Y:0,custom:()=>buildPlayon(),ox:0,oz:0,W:560,H:400,amb:[.16,.17,.2],dayk:.9,fog:.006,start:[8,50,1.5708],exit:()=>false,hordeAt:()=>false,obj0:'Playón de Vaca Muerta: mapa de disparos. Sin puertas, sin llaves, sin bichos.',intro:'Playón de Vaca Muerta.',next:''}];
 function inLevel(reg,y){const L=LVLDEF[LVLN];if(!L.regs.includes(reg))return false;if(reg==='ext')return true;if(reg==='sh')return y>LY-3.8&&y<LY+3.8;return y>LY-.6&&y<LY+3.7}
 let CUST=null;
 function loadLevel(k){LVLN=k;const L=LVLDEF[k];LY=L.Y;OX=L.ox;OZ=L.oz;CS=L.cs||.25;if(L.city){L.W=Math.ceil((CITY.W+10)/CS);L.H=Math.ceil((CITY.H+10)/CS)}W=L.W;H=L.H;WH=L.Y===0?3.5:2.8;L.tk=0;
@@ -1235,7 +1321,7 @@ function loadLevel(k){LVLN=k;const L=LVLDEF[k];LY=L.Y;OX=L.ox;OZ=L.oz;CS=L.cs||.
 function spawnCells(sx,sz,k){const dist=new Int32Array(W*H).fill(-1);const q=[I(Math.floor(sx/CS),Math.floor(sz/CS))];dist[q[0]]=0;let h=0;
   while(h<q.length){const c=q[h++],x=c%W,y=(c/W)|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy;if(a<0||b<0||a>=W||b>=H)continue;const v=G[I(a,b)];if((v!==0&&v!==3)||dist[I(a,b)]>=0)continue;dist[I(a,b)]=dist[c]+1;q.push(I(a,b))}}
   const dmin=14/CS,dmax=(k===5?175:k===6?160:50)/CS;const cand=[];for(let i=0;i<W*H;i++)if(G[i]===0&&dist[i]>dmin&&dist[i]<dmax)cand.push(i);
-  const n=Math.min(k===7?4:k===4?16:k===5?26:k===6?40:18,cand.length);for(let i=0;i<n;i++){const c=cand.splice((R()*cand.length)|0,1)[0];ZSPAWN.push([c%W,(c/W)|0])}}
+  const n=Math.min(k===8?0:k===7?4:k===4?16:k===5?26:k===6?40:18,cand.length);for(let i=0;i<n;i++){const c=cand.splice((R()*cand.length)|0,1)[0];ZSPAWN.push([c%W,(c/W)|0])}}
 // ---- geometría estática: cada quad MEV es una caja finita con matriz propia
 const _q=new Float32Array(16);
 function quadBox(A,B,C,D,e){const abx=B[0]-A[0],aby=B[1]-A[1],abz=B[2]-A[2],adx=D[0]-A[0],ady=D[1]-A[1],adz=D[2]-A[2];
@@ -3325,7 +3411,7 @@ function mercLoad(a){if(!a)return;a.forEach((v,i)=>{const m=MERCS[i];if(!m)retur
 const PROTAS={Facundo:{w:'Hacha',wi:0,perk:'Puntería (dispersión -20%)'},Alma:{w:'Cano',wi:0,perk:'Resistencia (hambre y sed bajan 25% más lento)'},Aurelio:{w:'Stillson',wi:0,perk:'Fuerza (cuerpo a cuerpo +30%)'},Maxi:{w:'Cano',wi:0,perk:'Manos rápidas (recarga 25% más rápida)'}};
 window.PROTA_INFO={Facundo:'puntería',Alma:'resistencia',Aurelio:'fuerza',Maxi:'recarga rápida'};
 const PROTS=[];
-function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;P.melee=w.w;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&n!=='Pistola'){q.mag=0;q.res=0}if(d.k==='throw')q.res=0}WS.Pistola.mag=WDAT.Pistola.mag;WI=1;msg('Jugás como '+P.who+'. Facón y Bersa. '+w.perk,6)}
+function protaStart(){const w=PROTAS[P.who]||PROTAS.Facundo;P.melee=w.w;for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'&&n!=='Pistola'){q.mag=0;q.res=0}if(d.k==='throw')q.res=0}WS.Pistola.mag=WDAT.Pistola.mag;WI=1;msg('Jugás como '+P.who+'. Facón y Bersa. '+w.perk,6);if(LVLN===8){for(const n of WORDER){const d=WDAT[n],q=WS[n];if(d.k==='gun'){q.mag=d.mag;q.res=d.res*3}else if(d.k==='throw')q.res=6}P.melee=null;WI=2;msg('Playón: tenés todas las armas. 1-9 para cambiar.',6)}}
 function protaPlace(){PROTS.length=0;const RF=(CITY.refuges||[])[0];if(!RF)return;let k=0;for(const n of Object.keys(PROTAS)){if(n===(P.who||'Facundo'))continue;
  let c;try{c=GEN.armedChar(n,PROTAS[n].w)}catch(e){continue}c.tpl=charTplObj(c);c.wp.tpl=charTplObj(c.wp);
  PROTS.push({n,ch:c,x:RF.x+1.5+k*2.2,z:RF.z+3.6,yaw:Math.PI,t:R()*5});k++}}
@@ -3473,7 +3559,7 @@ const ZM=(()=>{
  const fmt=t=>{const d=new Date(t);return d.toLocaleDateString()+' '+d.toLocaleTimeString().slice(0,5)};
  const KEYS='<div class="keys">WASD moverse · Shift correr · Espacio saltar / trepar · Click disparar · Click der. empujar<br>R recargar · F linterna · E usar · M mapa · TAB pedidos · Ruedita mira / cambiar arma · Esc pausa</div>';
  function render(msg){const sv=getSave();let h='';
-  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN · EL GALLO McFLAY · v28.0</div>`+B('play','JUGAR')+`<div class="row" style="grid-template-columns:150px 200px"><span>Personaje</span><button id="zm_who" style="font-size:15px;padding:4px 10px">${CFG.who} · ${(window.PROTA_INFO||{})[CFG.who]||''}</button></div>`+`<div class="row" style="grid-template-columns:150px 200px"><span>Escenario</span><button id="zm_map" style="font-size:15px;padding:4px 10px">${CFG.mapa==='prueba'?'Calle de prueba':CFG.mapa==='ciudad'?'Ciudad (libre)':'Campaña · Hospital'}</button></div>`+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
+  if(panel==='main'){h=`<h1>ZONA MUERTA</h1><div class="sub">VACA MUERTA · NEUQUÉN · EL GALLO McFLAY · v28.1</div>`+B('play','JUGAR')+`<div class="row" style="grid-template-columns:150px 200px"><span>Personaje</span><button id="zm_who" style="font-size:15px;padding:4px 10px">${CFG.who} · ${(window.PROTA_INFO||{})[CFG.who]||''}</button></div>`+`<div class="row" style="grid-template-columns:150px 200px"><span>Escenario</span><button id="zm_map" style="font-size:15px;padding:4px 10px">${CFG.mapa==='playon'?'Playón (disparos)':CFG.mapa==='prueba'?'Calle de prueba':CFG.mapa==='ciudad'?'Ciudad (libre)':'Campaña · Hospital'}</button></div>`+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)} · ${sv.MDONE||0} pedidos</div>`:'')+((window.zm&&window.zm.update)?B('upd','ACTUALIZAR'):'')+B('cfg','CONFIGURACIÓN')+((window.zm&&window.zm.update)?B('quit','SALIR'):'')+KEYS}
   else if(panel==='pause'){h=`<h2>PAUSA</h2>`+B('cont','CONTINUAR')+B('save','GUARDAR')+B('load','CARGAR',!sv)+(sv?`<div class="note">Guardada: ${fmt(sv.date)}</div>`:'')+B('cfg','CONFIGURACIÓN')+B('menu','SALIR AL MENÚ')+((window.zm&&window.zm.update)?B('quit','SALIR DEL JUEGO'):'')}
   else if(panel==='cfg'){h=`<h2>CONFIGURACIÓN</h2>
    <div class="row"><span>Calidad gráfica</span><button id="zm_q" style="font-size:15px;padding:4px 10px">${QLV[QL].n}</button></div>
@@ -3486,7 +3572,7 @@ const ZM=(()=>{
   on('cont',resume);on('save',save);on('menu',toMenu);on('back',()=>{panel=prev;render()});
   on('q',()=>{QL=(QL+1)%QLV.length;try{localStorage.setItem('zmQL',QL)}catch(e){}render()});
   on('fps',()=>{CFG.fps=!CFG.fps;saveCfg();apply();render()});
-  on('map',()=>{CFG.mapa=CFG.mapa==='hospital'?'ciudad':CFG.mapa==='ciudad'?'prueba':'hospital';saveCfg();render()});
+  on('map',()=>{CFG.mapa=CFG.mapa==='hospital'?'ciudad':CFG.mapa==='ciudad'?'prueba':CFG.mapa==='prueba'?'playon':'hospital';saveCfg();render()});
   on('who',()=>{const L=['Facundo','Alma','Aurelio','Maxi'];CFG.who=L[(L.indexOf(CFG.who)+1)%4];saveCfg();render()});
   const sl=(id,k,lab,f)=>{const i=document.getElementById('zm_'+id);if(i)i.addEventListener('input',()=>{CFG[k]=+i.value;document.getElementById(lab).textContent=f(CFG[k]);saveCfg();apply()})};
   sl('sens','sens','zm_sv',v=>v.toFixed(2));sl('vol','vol','zm_vv',v=>Math.round(v*100)+'%');
@@ -3495,7 +3581,7 @@ const ZM=(()=>{
  function show(p,msg){panel=p;el.style.display='flex';$('ov').style.display='none';render(msg)}
  function hide(){el.style.display='none'}
  function lock(){if(!TEST)cv.requestPointerLock&&cv.requestPointerLock()}
- function play(){hide();S='menu';window.ZM_TEST=CFG.mapa==='prueba';MODE=CFG.mapa==='ciudad'?6:0;LVLN=0;P.who=CFG.who;start();P.chapas=0;if(typeof protaStart==='function')protaStart();apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
+ function play(){hide();S='menu';window.ZM_TEST=CFG.mapa==='prueba';if(CFG.mapa==='playon')window.ZM_LVL=8;MODE=CFG.mapa==='ciudad'?6:0;LVLN=0;P.who=CFG.who;start();P.chapas=0;if(typeof protaStart==='function')protaStart();apply();lock();setTimeout(()=>{if(S==='play')msg('Explotó un pozo en Vaca Muerta. Lo que salió llegó hasta Neuquén.',7)},1800)}
  function resume(){hide();S='play';apply();lock()}
  function toMenu(){S='menu';document.exitPointerLock&&document.exitPointerLock();show('main')}
  function save(){if(!LVL||!LVL.city){render('Solo se puede guardar en la ciudad');return}
@@ -3515,7 +3601,7 @@ const ZM=(()=>{
  return{show,hide,pause,main:()=>show('main'),apply,CFG,save}})();
 if(!TEST){ZM.main();ZM.apply()}
 
-window.__g={get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get REF(){return CITY.refuge},get DAY(){return DAY},get CUST(){return CUST},buildStatic,MLAY,get REFS(){return CITY.refuges},get CARD(){return CARD},get tradeBuy(){return typeof tradeBuy==='function'?tradeBuy:null},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},get DRAWN(){return DRAWN},keys,cardClose,castRay,get LAMPS(){return LAMPS},cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
+window.__g={get P(){return P},get PICKS(){return PICKS},get START(){return START},get LVL(){return LVL},get LVLN(){return LVLN},get REF(){return CITY.refuge},get DAY(){return DAY},get CUST(){return CUST},buildStatic,MLAY,get REFS(){return CITY.refuges},get CARD(){return CARD},get tradeBuy(){return typeof tradeBuy==='function'?tradeBuy:null},get gate(){return gate},get DOORS(){return DOORS},get G(){return G},get GH(){return GH},get DRAWN(){return DRAWN},keys,cardClose,castRay,get LAMPS(){return LAMPS},cityDirector,get DIR(){return DIR},get MDONE(){return MDONE},get W(){return W},get H(){return H},get OX(){return OX},get OZ(){return OZ},get LY(){return LY},get LAMPS(){return LAMPS},get texReady(){return texReady},loadLevel,nextLevel,reload,wFire,wSel,WS,WDAT,get WI(){return WI},P,get zs(){return zs},EV,CS,S:()=>S,start,update,buildDyn,render,hud,spawnOut,spawnSpecial,mkZ,fire,shove,interact,startEvent,keys,solidAt,updateFD,castRay,LAMPS,PICKS,setS:v=>{S=v},counts:()=>({sb:SB.n,db:DB.n,fb:FB.n})};
 requestAnimationFrame(frame);
 </script>
 <script src="data/mevdata.js"></script>
